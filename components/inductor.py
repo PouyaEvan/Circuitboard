@@ -27,6 +27,7 @@ class Inductor(Component):
         coil_count = 6
         turn_spacing = body_width / (coil_count)
         coil_radius = turn_spacing / 2
+        coil_amplitude = coil_radius  # Height of the coil for label positioning
         coil_path = QPainterPath()
         # Start at first coil entry point
         coil_path.moveTo(lead_length, 0)
