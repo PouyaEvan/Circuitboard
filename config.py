@@ -12,7 +12,6 @@ from PyQt6.QtGui import (QAction, QIcon, QPainter, QPen, QBrush, QColor, QFont,
 from PyQt6.QtPrintSupport import QPrintDialog, QPrinter
 from PyQt6.QtCore import (Qt, QPointF, QRectF, QLineF, QByteArray, QDataStream,
                           QIODevice)
-from gui.canvas import CircuitCanvas
 from components.resistor import Resistor
 from components.vs import VoltageSource
 from components.cs import CurrentSource
@@ -136,30 +135,33 @@ class Component(QGraphicsItemGroup):
             new_y = current_pos.y() # Keep the original y offset
             self.label_item.setPos(new_x, new_y)
 
-
-        if hasattr(self.scene(), 'views') and self.scene().views():
-             main_window = self.scene().views()[0].main_window
-             if main_window:
-                  main_window.deregister_component_name(self.component_type[0], old_name)
-                  main_window.register_component_name(self.component_type[0], name)
+        # Update component name registration in main window if available
+        scene = self.scene()
+        if scene:
+            views = scene.views()
+            if views:
+                main_window = views[0].main_window
+                if main_window:
+                    main_window.deregister_component_name(self.component_type[0], old_name)
+                    main_window.register_component_name(self.component_type[0], name)
 
 
     def itemChange(self, change, value):
         if change == QGraphicsItemGroup.GraphicsItemChange.ItemPositionChange:
             new_pos = value
-            if hasattr(self.scene(), 'views') and self.scene().views():
-                 canvas = self.scene().views()[0]
-                 # Snap only if the view has snap_to_grid_enabled attribute
-                 if getattr(canvas, 'snap_to_grid_enabled', False):
-                      snapped_x = round(new_pos.x() / GRID_SIZE) * GRID_SIZE
-                      snapped_y = round(new_pos.y() / GRID_SIZE) * GRID_SIZE
-                      return QPointF(snapped_x, snapped_y)
+            scene = self.scene()
+            if scene:
+                views = scene.views()
+                if views and getattr(views[0], 'snap_to_grid_enabled', False):
+                    snapped_x = round(new_pos.x() / GRID_SIZE) * GRID_SIZE
+                    snapped_y = round(new_pos.y() / GRID_SIZE) * GRID_SIZE
+                    return QPointF(snapped_x, snapped_y)
             return new_pos
 
         if change == QGraphicsItemGroup.GraphicsItemChange.ItemPositionHasChanged:
-             # Update connected wires when component moves
-             for wire in self.connected_wires:
-                  wire.update_positions()
+            # Update connected wires when component moves
+            for wire in self.connected_wires:
+                wire.update_positions()
 
 
         return super().itemChange(change, value)
@@ -196,48 +198,24 @@ class Component(QGraphicsItemGroup):
 
 
     def remove(self):
-        print(f"Component.remove() called for {self.component_name}")
+        """Removes component from scene and netlist."""
         scene = self.scene()
         if not scene:
-            print("Component has no scene in remove(), cannot proceed.")
             return
-
-        for wire in list(self.connected_wires):
-            print(f"Removing connected wire: {wire}")
-            wire.remove()
-
-        if hasattr(scene, 'views') and scene.views():
-            for view in scene.views():
-                # Clear hovered pin reference on any view that tracks hover
-                if hasattr(view, 'hovered_pin') and view.hovered_pin in self._pins:
-                    view.hovered_pin = None
-                    print(f"Cleared hovered pin reference for deleted component {self.component_name}")
-        if isinstance(scene, QGraphicsScene):
-             if hasattr(scene, 'views') and scene.views():
-                 main_window = scene.views()[0].main_window
-                 if main_window:
-                     main_window.deregister_component_name(self.component_type[0], self.component_name)
-                     if hasattr(main_window, 'netlist'):
-                          print("Calling netlist.remove_component from Component.remove()")
-                          main_window.netlist.remove_component(self)
-                     else:
-                          print("Could not access netlist from Component.remove()")
-                 else:
-                      print("Could not access main_window from Component.remove()")
-
-
+        # Remove from netlist if possible
+        views = scene.views()
+        if views:
+            main_window = views[0].main_window
+            if main_window and hasattr(main_window, 'netlist'):
+                main_window.netlist.remove_component(self)
+        # Remove connected text items
         for item in self.current_text_items:
-             if item.scene():
-                  item.scene().removeItem(item)
+            if item.scene():
+                item.scene().removeItem(item)
         self.current_text_items.clear()
-
-        # Removed value_text_item removal logic
-
-
-        print(f"Removing component item from scene: {self}")
+        # Remove component graphic
         scene.removeItem(self)
-        print("Component item removed from scene.")
-        print(f"Component.remove() finished for {self.component_name}.")
+        print(f"Component {self.component_name} removed from scene and netlist.")
 
 
     def add_connected_wire(self, wire):

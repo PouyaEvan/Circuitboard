@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                              QGraphicsPathItem, QFileDialog, QDockWidget, QListWidget,
                              QLabel, QLineEdit, QFormLayout, QPushButton, QCheckBox)
 from PyQt6.QtGui import (QAction, QIcon, QPainter, QPen, QBrush, QColor, QFont,
-                         QTransform, QFontMetrics, QPainterPath, QKeySequence)
+                         QTransform, QFontMetrics, QPainterPath, QKeySequence, QLinearGradient)
 from PyQt6.QtCore import Qt, QPointF
 import math
 
@@ -75,8 +75,12 @@ class Resistor(Component):
         self.body_height = GRID_SIZE * 1.5
 
         self.body = QGraphicsRectItem(0, -self.body_height/2, self.body_width, self.body_height, self)
-        self.body.setBrush(QBrush(Qt.GlobalColor.white))
-        self.body.setPen(QPen(Qt.GlobalColor.black, 2))
+        # Gradient fill for block-style resistor
+        gradient = QLinearGradient(0, -self.body_height/2, self.body_width, self.body_height/2)
+        gradient.setColorAt(0, QColor(255, 200, 0))  # Light amber
+        gradient.setColorAt(1, QColor(255, 150, 0))  # Darker amber
+        self.body.setBrush(QBrush(gradient))
+        self.body.setPen(QPen(QColor(255, 140, 0), 2))  # Amber border
 
         lead_length = GRID_SIZE
         lead1 = QGraphicsLineItem(-lead_length, 0, 0, 0, self)

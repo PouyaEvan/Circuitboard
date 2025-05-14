@@ -1285,6 +1285,23 @@ class MainWindow(QMainWindow):
         zoom_to_fit_action.triggered.connect(self.zoom_to_fit)
         view_menu.addAction(zoom_to_fit_action)
 
+        # Analysis menu with DC and Transient actions
+        analysis_menu = menubar.addMenu("&Analysis")
+        dc_action = QAction("DC Analysis", self)
+        dc_action.triggered.connect(self.run_dc_analysis)
+        analysis_menu.addAction(dc_action)
+        transient_action = QAction("Transient Analysis", self)
+        transient_action.triggered.connect(self.run_transient_analysis)
+        analysis_menu.addAction(transient_action)
+        # Help menu for Instructions and Changelog
+        help_menu = menubar.addMenu("&Help")
+        instr_action = QAction("Instructions", self)
+        instr_action.triggered.connect(self.show_instructions)
+        help_menu.addAction(instr_action)
+        changelog_action = QAction("Changelog", self)
+        changelog_action.triggered.connect(self.show_changelog)
+        help_menu.addAction(changelog_action)
+
 
     def setup_toolbar(self):
         toolbar = QToolBar("Tools")
@@ -1910,27 +1927,6 @@ class MainWindow(QMainWindow):
             print("Circuit printed.")
         else:
             print("Print cancelled.")
-
-    def init_menus(self):
-        menu_bar = self.menuBar()
-        # File menu
-        file_menu = menu_bar.addMenu("&File")
-        exit_action = QAction("E&xit", self)
-        exit_action.triggered.connect(self.close)
-        file_menu.addAction(exit_action)
-        # Analysis menu
-        analysis_menu = menu_bar.addMenu("&Analysis")
-        transient_action = QAction("Transient Analysis", self)
-        transient_action.triggered.connect(self.run_transient_analysis)
-        analysis_menu.addAction(transient_action)
-        # Help menu
-        help_menu = menu_bar.addMenu("&Help")
-        instr_action = QAction("Instructions", self)
-        instr_action.triggered.connect(self.show_instructions)
-        changelog_action = QAction("Changelog", self)
-        changelog_action.triggered.connect(self.show_changelog)
-        help_menu.addAction(instr_action)
-        help_menu.addAction(changelog_action)
 
     def run_transient_analysis(self):
         # Prompt for simulation settings
