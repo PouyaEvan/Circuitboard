@@ -12,6 +12,7 @@ from PyQt6.QtGui import (QAction, QIcon, QPainter, QPen, QBrush, QColor, QFont,
 from PyQt6.QtCore import Qt, QPointF
 
 from config import *
+from config import Component
 
 class Component(QGraphicsItemGroup):
     def __init__(self, name="Comp", position=QPointF(0, 0), parent=None):

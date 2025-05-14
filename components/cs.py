@@ -12,6 +12,7 @@ from PyQt6.QtGui import (QAction, QIcon, QPainter, QPen, QBrush, QColor, QFont,
 from PyQt6.QtCore import Qt, QPointF
 
 from config import *
+from config import Component
 
 
 class CurrentSource(Component):

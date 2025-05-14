@@ -12,6 +12,7 @@ from PyQt6.QtGui import (QAction, QIcon, QPainter, QPen, QBrush, QColor, QFont,
 from PyQt6.QtCore import Qt, QPointF
 
 from config import *
+from config import Component
 
 class VoltageSource(Component):
     def __init__(self, name="V", position=QPointF(0, 0), voltage=5.0):

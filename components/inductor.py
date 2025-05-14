@@ -13,6 +13,7 @@ from PyQt6.QtCore import Qt, QPointF
 import math
 
 from config import *
+from config import Component
 
 class Inductor(Component):
     def __init__(self, name="L", position=QPointF(0, 0), inductance=1e-3):
