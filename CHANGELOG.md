@@ -1,3 +1,20 @@
+## [0.6.0] - 2025-05-14
+
+### Added
+- SI prefix formatting for voltages and currents (mV, μA, etc.) in simulation results and component labels
+- Scrollable changelog dialog in the application
+
+### Changed
+- Improved inductor rendering and label formatting
+- Fixed duplicate menubar issue in main window
+- Improved simulator output to avoid misleading or wrong results (e.g., NaN, scientific notation)
+
+### Fixed
+- Simulation results now display correct units and values
+- Inductor design and display issues
+
+---
+
 ## [Unreleased]
 
 ### Added

@@ -80,22 +80,23 @@ class Inductor(Component):
 
     def update_label_text(self):
         if self.label_item:
-            if abs(self.inductance) >= 1e-3:
+            abs_l = abs(self.inductance)
+            if abs_l >= 1:
+                display_value = self.inductance
+                unit = "H"
+            elif abs_l >= 1e-3:
                 display_value = self.inductance * 1e3
                 unit = "mH"
-            elif abs(self.inductance) >= 1e-6:
+            elif abs_l >= 1e-6:
                 display_value = self.inductance * 1e6
                 unit = "μH"
-            elif abs(self.inductance) >= 1e-9:
+            elif abs_l >= 1e-9:
                 display_value = self.inductance * 1e9
                 unit = "nH"
             else:
                 display_value = self.inductance
                 unit = "H"
-
             self.label_item.setPlainText(f"{self.component_name} ({display_value:.2f}{unit})")
-            
-            # Re-center label
             label_rect = self.label_item.boundingRect()
             current_pos = self.label_item.pos()
             body_width = GRID_SIZE * 4

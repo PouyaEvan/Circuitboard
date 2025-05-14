@@ -82,9 +82,20 @@ class VoltageSource(Component):
 
     def update_label_text(self):
         if self.label_item:
-            self.label_item.setPlainText(f"{self.component_name} ({self.voltage}V)")
-            
-            # Re-center label
+            abs_v = abs(self.voltage)
+            if abs_v >= 1:
+                display_value = self.voltage
+                unit = "V"
+            elif abs_v >= 1e-3:
+                display_value = self.voltage * 1e3
+                unit = "mV"
+            elif abs_v >= 1e-6:
+                display_value = self.voltage * 1e6
+                unit = "μV"
+            else:
+                display_value = self.voltage
+                unit = "V"
+            self.label_item.setPlainText(f"{self.component_name} ({display_value:.2f}{unit})")
             label_rect = self.label_item.boundingRect()
             current_pos = self.label_item.pos()
             width = GRID_SIZE * 4

@@ -80,9 +80,23 @@ class CurrentSource(Component):
 
     def update_label_text(self):
         if self.label_item:
-            self.label_item.setPlainText(f"{self.component_name} ({self.current}A)")
-            
-            # Re-center label
+            abs_i = abs(self.current)
+            if abs_i >= 1:
+                display_value = self.current
+                unit = "A"
+            elif abs_i >= 1e-3:
+                display_value = self.current * 1e3
+                unit = "mA"
+            elif abs_i >= 1e-6:
+                display_value = self.current * 1e6
+                unit = "μA"
+            elif abs_i >= 1e-9:
+                display_value = self.current * 1e9
+                unit = "nA"
+            else:
+                display_value = self.current
+                unit = "A"
+            self.label_item.setPlainText(f"{self.component_name} ({display_value:.2f}{unit})")
             label_rect = self.label_item.boundingRect()
             current_pos = self.label_item.pos()
             width = GRID_SIZE * 4

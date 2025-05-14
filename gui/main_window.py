@@ -1,10 +1,10 @@
 import os
 import json
 from PyQt6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QGraphicsScene, QAction, QMessageBox,
+    QMainWindow, QWidget, QVBoxLayout, QGraphicsScene, QMessageBox,
     QFileDialog, QToolBar, QDialog, QDialogButtonBox, QFormLayout, QInputDialog
 )
-from PyQt6.QtGui import QKeySequence, QPainter
+from PyQt6.QtGui import QKeySequence, QPainter, QAction
 from PyQt6.QtPrintSupport import QPrintDialog, QPrinter
 from PyQt6.QtCore import Qt, QPointF
 
@@ -157,7 +157,7 @@ class MainWindow(QMainWindow):
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.properties_panel)
 
         self.setup_toolbar()
-        self.setup_menubar() # Added menubar for File actions
+        # self.setup_menubar() # Removed duplicate menubar setup
 
         self.activate_tool(self.findChild(QAction, "select_action"), None)
 
@@ -603,10 +603,21 @@ class MainWindow(QMainWindow):
 
         print("Displaying simulation results on canvas...")
 
+        def format_voltage(val):
+            abs_val = abs(val)
+            if abs_val >= 1:
+                return f"{val:.2f} V"
+            elif abs_val >= 1e-3:
+                return f"{val*1e3:.2f} mV"
+            elif abs_val >= 1e-6:
+                return f"{val*1e6:.2f} μV"
+            else:
+                return f"{val:.2e} V"
+
         for node_id, node in self.netlist.nodes.items():
             voltage = self.simulation_results.get_node_voltage(node_id)
             if voltage is not None and node.voltage_text_item:
-                node.voltage_text_item.setPlainText(f"{voltage:.2f} V")
+                node.voltage_text_item.setPlainText(format_voltage(voltage))
                 node.voltage_text_item.setVisible(True)
 
         for component in self.netlist.components:
@@ -902,4 +913,24 @@ class MainWindow(QMainWindow):
         dlg.exec()
 
     def show_changelog(self):
-        QMessageBox.information(self, 'Changelog', open('CHANGELOG.md').read())
+        from PyQt6.QtWidgets import QDialog, QVBoxLayout, QTextEdit, QDialogButtonBox
+        dlg = QDialog(self)
+        dlg.setWindowTitle('Changelog')
+        dlg.resize(700, 500)
+        layout = QVBoxLayout(dlg)
+        text_edit = QTextEdit(dlg)
+        text_edit.setReadOnly(True)
+        text_edit.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
+        text_edit.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        try:
+            with open('CHANGELOG.md', 'r') as f:
+                changelog = f.read()
+        except Exception as e:
+            changelog = f"Could not load changelog: {e}"
+        text_edit.setPlainText(changelog)
+        layout.addWidget(text_edit)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
+        buttons.accepted.connect(dlg.accept)
+        buttons.rejected.connect(dlg.reject)
+        layout.addWidget(buttons)
+        dlg.exec()

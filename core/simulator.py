@@ -510,6 +510,31 @@ class CircuitSimulator:
                   connected_wires.append(wire)
         return connected_wires
 
+    def _format_value_with_unit(self, value, unit):
+        # Helper to format values with SI prefixes
+        abs_val = abs(value)
+        if unit == 'V':
+            if abs_val >= 1:
+                return f"{value:.2f} V"
+            elif abs_val >= 1e-3:
+                return f"{value*1e3:.2f} mV"
+            elif abs_val >= 1e-6:
+                return f"{value*1e6:.2f} μV"
+            else:
+                return f"{value:.2e} V"
+        elif unit == 'A':
+            if abs_val >= 1:
+                return f"{value:.2f} A"
+            elif abs_val >= 1e-3:
+                return f"{value*1e3:.2f} mA"
+            elif abs_val >= 1e-6:
+                return f"{value*1e6:.2f} μA"
+            elif abs_val >= 1e-9:
+                return f"{value*1e9:.2f} nA"
+            else:
+                return f"{value:.2e} A"
+        return f"{value} {unit}"
+
     def get_results_description(self, include_wire_currents=False):
         if not self.node_voltages and not self.component_currents:
             return "No simulation results available."
@@ -520,70 +545,64 @@ class CircuitSimulator:
             sorted_node_ids = sorted(self.node_voltages.keys())
             for node_id in sorted_node_ids:
                 voltage = self.node_voltages[node_id]
+                if voltage is None or (isinstance(voltage, float) and (np.isnan(voltage) or np.isinf(voltage))):
+                    continue
                 ground_status = " (Ground)" if self.netlist.nodes.get(node_id, None) and self.netlist.nodes[node_id].is_ground else ""
-                description += f"  Node {node_id}{ground_status}: {voltage:.3e} V\n"
+                description += f"  Node {node_id}{ground_status}: {self._format_value_with_unit(voltage, 'V')}\n"
         else:
             description += "  No node voltage data.\n"
 
         description += "\nComponent Currents:\n"
         if self.component_currents:
             for (component, current_label), current_val in self.component_currents.items():
-                if isinstance(current_val, str): # Handle "Unconnected Pin" or similar messages
+                if isinstance(current_val, str):
                     description += f"  {component.component_name} ({current_label}): {current_val}\n"
+                elif current_val is None or (isinstance(current_val, float) and (np.isnan(current_val) or np.isinf(current_val))):
+                    continue
                 else:
-                    description += f"  {component.component_name} ({current_label}): {current_val:.3e} A\n"
+                    description += f"  {component.component_name} ({current_label}): {self._format_value_with_unit(current_val, 'A')}\n"
         else:
             description += "  No component current data.\n"
 
         if include_wire_currents:
-            description += "\nWire Currents (Conventional Current Flow):\n" # Changed from Electron Flow
+            description += "\nWire Currents (Conventional Current Flow):\n"
             if self.wire_currents:
                 processed_wires = set()
-                for wire_obj in self.netlist.wires: # Iterate through actual wire objects to ensure all are covered
+                for wire_obj in self.netlist.wires:
                     found_current_for_wire = False
                     for (wire, direction), current_val in self.wire_currents.items():
                         if wire == wire_obj:
                             if wire in processed_wires:
-                                continue # Already described this wire
-
+                                continue
                             start_pin_comp = wire.start_pin.data(2)
                             start_pin_name = wire.start_pin.data(1)
                             end_pin_comp = wire.end_pin.data(2)
                             end_pin_name = wire.end_pin.data(1)
-
                             wire_id_str = f"{start_pin_comp.component_name}.{start_pin_name} to {end_pin_comp.component_name}.{end_pin_name}"
-
                             flow_desc = "No current"
-                            if abs(current_val) > 1e-9: # Check if current is non-zero
-                                if direction == 1: # Conventional current Start to End
+                            if abs(current_val) > 1e-9:
+                                if direction == 1:
                                     flow_desc = f"Conventional current from {start_pin_comp.component_name}.{start_pin_name} to {end_pin_comp.component_name}.{end_pin_name}"
-                                elif direction == -1: # Conventional current End to Start
+                                elif direction == -1:
                                     flow_desc = f"Conventional current from {end_pin_comp.component_name}.{end_pin_name} to {start_pin_comp.component_name}.{start_pin_name}"
-                            description += f"  Wire ({wire_id_str}): {current_val:.3e} A ({flow_desc})\n"
+                            description += f"  Wire ({wire_id_str}): {self._format_value_with_unit(current_val, 'A')} ({flow_desc})\n"
                             processed_wires.add(wire)
                             found_current_for_wire = True
-                            break # Found current for this wire_obj
-                    if not found_current_for_wire: # Wire exists but no current entry (should be (wire,0):0.0 or similar)
+                            break
+                    if not found_current_for_wire:
                         start_pin_comp = wire_obj.start_pin.data(2)
                         start_pin_name = wire_obj.start_pin.data(1)
                         end_pin_comp = wire_obj.end_pin.data(2)
                         end_pin_name = wire_obj.end_pin.data(1)
                         wire_id_str = f"{start_pin_comp.component_name}.{start_pin_name} to {end_pin_comp.component_name}.{end_pin_name}"
-                        # Check if there's a zero current entry
                         zero_current_entry = self.wire_currents.get((wire_obj, 0))
                         if zero_current_entry is not None:
-                             description += f"  Wire ({wire_id_str}): {zero_current_entry:.3e} A (No current)\n"
+                             description += f"  Wire ({wire_id_str}): {self._format_value_with_unit(zero_current_entry, 'A')} (No current)\n"
                         else:
-                             description += f"  Wire ({wire_id_str}): 0.000e+00 A (No current / Not in results)\n" # Default if no entry at all
+                             description += f"  Wire ({wire_id_str}): 0.00 A (No current / Not in results)\n"
                         processed_wires.add(wire_obj)
-
-
             else:
                 description += "  No wire current data.\n"
-
-        # Revert temporary ground setting if it was auto-assigned during simulation
-        # This part should be handled at the end of run_dc_analysis or simulate_transient
-        # For now, just return the description.
         return description
 
     def get_node_voltage(self, node_id):
