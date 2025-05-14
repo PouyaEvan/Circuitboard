@@ -13,7 +13,7 @@ from PyQt6.QtCore import Qt, QPointF, QRectF, QLineF
 
 from config import *
 from components.wire import Wire
-from components.capacitor import Capacitor, Component
+from components.capacitor import Capacitor
 from components.ground import Ground
 from components.inductor import Inductor
 from components.resistor import Resistor

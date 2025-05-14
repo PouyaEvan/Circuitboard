@@ -12,13 +12,7 @@ from PyQt6.QtGui import (QAction, QIcon, QPainter, QPen, QBrush, QColor, QFont,
 from PyQt6.QtPrintSupport import QPrintDialog, QPrinter
 from PyQt6.QtCore import (Qt, QPointF, QRectF, QLineF, QByteArray, QDataStream,
                           QIODevice)
-from components.resistor import Resistor
 
-from components.vs import VoltageSource
-from components.cs import CurrentSource
-from components.inductor import Inductor
-from components.capacitor import Capacitor
-from components.ground import Ground
 
 GRID_SIZE = 20
 GRID_COLOR = QColor(220, 220, 220)
