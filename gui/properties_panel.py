@@ -19,6 +19,7 @@ class PropertiesPanel(QDockWidget):
         self.layout.addWidget(self.component_list_label)
 
         self.component_list_widget = QListWidget()
+        self.component_list_widget.setSelectionMode(QListWidget.SelectionMode.SingleSelection)
         self.component_list_widget.currentItemChanged.connect(self.on_component_selected)
         self.layout.addWidget(self.component_list_widget)
 
@@ -28,6 +29,8 @@ class PropertiesPanel(QDockWidget):
         self.property_editors = {} # Dictionary to store QLineEdit editors for properties
 
         self.save_button = QPushButton("Apply Changes")
+        self.save_button.setDefault(True)
+        self.save_button.setAutoDefault(True)
         self.save_button.clicked.connect(self.apply_property_changes)
         self.layout.addWidget(self.save_button)
 
@@ -77,21 +80,25 @@ class PropertiesPanel(QDockWidget):
             # Select the component in the list widget
             items = self.component_list_widget.findItems(self.selected_component.component_name, Qt.MatchFlag.MatchExactly)
             if items:
-                 self.component_list_widget.setCurrentItem(items[0])
+                self.component_list_widget.setCurrentItem(items[0])
             else:
-                 # If the component is not in the list yet (e.g., just placed), update the list first
-                 self.update_component_list()
-                 items = self.component_list_widget.findItems(self.selected_component.component_name, Qt.MatchFlag.MatchExactly)
-                 if items:
-                      self.component_list_widget.setCurrentItem(items[0])
+                self.update_component_list()
+                items = self.component_list_widget.findItems(self.selected_component.component_name, Qt.MatchFlag.MatchExactly)
+                if items:
+                    self.component_list_widget.setCurrentItem(items[0])
 
-
-            properties = self.selected_component.get_properties()
-            for name, value in properties.items():
-                label = QLabel(name + ":")
-                editor = QLineEdit(str(value))
-                self.properties_form_layout.addRow(label, editor)
-                self.property_editors[name] = editor
+            # Only add property fields if not already present
+            if not self.property_editors:
+                properties = self.selected_component.get_properties()
+                for name, value in properties.items():
+                    label = QLabel(name + ":")
+                    editor = QLineEdit(str(value))
+                    editor.setClearButtonEnabled(True)
+                    editor.setPlaceholderText(f"Enter {name.lower()}")
+                    self.properties_form_layout.addRow(label, editor)
+                    self.property_editors[name] = editor
+        else:
+            self.selected_component = None
 
 
     def clear_properties_display(self):

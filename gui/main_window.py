@@ -44,35 +44,35 @@ class MainWindow(QMainWindow):
 
         self.setStyleSheet("""
             QMainWindow {
-                background-color: #f0f0f0;
+                background-color: #f7f9fa;
             }
             QToolBar {
-                background-color: #e8e8e8;
-                spacing: 5px;
-                padding: 5px;
-                border-bottom: 1px solid #d0d0d0;
-            }
-             QToolButton {
+                background-color: #e8eaf0;
+                spacing: 8px;
                 padding: 8px;
-                border: 1px solid #d0d0d0;
-                border-radius: 4px;
+                border-bottom: 1px solid #cfd8dc;
+            }
+            QToolButton {
+                padding: 10px;
+                border: 1px solid #b0bec5;
+                border-radius: 6px;
                 background-color: #ffffff;
                 text-align: left;
-                min-width: 100px;
+                min-width: 110px;
+                font-size: 15px;
             }
             QToolButton:hover {
-                background-color: #e0e0e0;
-                border-color: #c0c0c0;
+                background-color: #e3f2fd;
+                border-color: #90caf9;
             }
             QToolButton:checked {
-                background-color: #c0c0c0;
-                border-color: #a0a0a0;
+                background-color: #b3e5fc;
             }
             QGraphicsView {
-                border: 1px solid #d0d0d0;
-                background-color: #ffffff;
+                border: 1px solid #b0bec5;
+                background-color: #f5f7fa;
             }
-             QMessageBox {
+            QMessageBox {
                 background-color: #f8f8f8;
                 font-family: "Segoe UI";
             }
@@ -80,55 +80,55 @@ class MainWindow(QMainWindow):
                 color: #333333;
             }
             QMessageBox QPushButton {
-                padding: 5px 15px;
-                border: 1px solid #cccccc;
-                border-radius: 4px;
+                padding: 6px 18px;
+                border: 1px solid #b0bec5;
+                border-radius: 5px;
                 background-color: #e0e0e0;
             }
             QMessageBox QPushButton:hover {
-                background-color: #d0d0d0;
+                background-color: #b3e5fc;
             }
             QMessageBox QPushButton:pressed {
-                background-color: #c0c0c0;
+                background-color: #90caf9;
             }
             QDockWidget {
-                border: 1px solid #d0d0d0;
-                titlebar-background-color: #e8e8e8;
+                border: 1px solid #b0bec5;
+                titlebar-background-color: #e8eaf0;
             }
             QDockWidget::title {
                 text-align: center;
-                background-color: #e8e8e8;
-                padding: 3px;
+                background-color: #e8eaf0;
+                padding: 4px;
             }
             QListWidget {
-                border: 1px solid #d0d0d0;
+                border: 1px solid #b0bec5;
                 background-color: #ffffff;
             }
             QListWidget::item {
-                padding: 5px;
+                padding: 7px;
             }
             QListWidget::item:selected {
-                background-color: #c0c0c0;
+                background-color: #b3e5fc;
             }
             QFormLayout QLabel {
                 font-weight: bold;
             }
             QLineEdit {
-                padding: 5px;
-                border: 1px solid #d0d0d0;
-                border-radius: 3px;
+                padding: 7px;
+                border: 1px solid #b0bec5;
+                border-radius: 4px;
             }
             QPushButton {
-                padding: 8px;
-                border: 1px solid #d0d0d0;
-                border-radius: 4px;
+                padding: 10px;
+                border: 1px solid #b0bec5;
+                border-radius: 6px;
                 background-color: #ffffff;
             }
             QPushButton:hover {
-                background-color: #e0e0e0;
+                background-color: #e3f2fd;
             }
             QPushButton:pressed {
-                background-color: #c0c0c0;
+                background-color: #b3e5fc;
             }
         """)
         # Initialize application menus

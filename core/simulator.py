@@ -232,6 +232,18 @@ class CircuitSimulator:
 
         # --- Solve the System ---
         try:
+            # Check for ill-conditioned matrix
+            if num_variables > 0:
+                cond_number = np.linalg.cond(A)
+                if cond_number > 1e12:
+                    self.node_voltages = {}
+                    self.component_currents = {}
+                    self.wire_currents = {}
+                    if ground_node and auto_ground_warning:
+                        ground_node.is_ground = False
+                    return ("Simulation failed: Circuit matrix is ill-conditioned (condition number: "
+                            f"{cond_number:.2e}). This may indicate nearly floating nodes, very large/small values, or numerical instability.")
+
             # Check for singular matrix before solving
             if num_variables > 0 and np.linalg.matrix_rank(A) < num_variables:
                  singular_hint = "Simulation failed: Circuit matrix is singular. This usually means:\n"
@@ -460,6 +472,17 @@ class CircuitSimulator:
                                self.wire_currents[(wire, 0)] = 0.0 # Zero current for wires connected to capacitor
 
 
+            # Post-process: Set very small values to zero for clarity
+            for k, v in list(self.node_voltages.items()):
+                if isinstance(v, float) and abs(v) < 1e-12:
+                    self.node_voltages[k] = 0.0
+            for k, v in list(self.component_currents.items()):
+                if isinstance(v, float) and abs(v) < 1e-12:
+                    self.component_currents[k] = 0.0
+            for k, v in list(self.wire_currents.items()):
+                if isinstance(v, float) and abs(v) < 1e-12:
+                    self.wire_currents[k] = 0.0
+
             # Ensure all wires have a current entry (even if 0)
             for wire in self.netlist.wires:
                  has_current_entry = False
@@ -511,26 +534,28 @@ class CircuitSimulator:
         return connected_wires
 
     def _format_value_with_unit(self, value, unit):
-        # Helper to format values with SI prefixes
+        # Improved SI prefix formatting and precision
         abs_val = abs(value)
         if unit == 'V':
             if abs_val >= 1:
-                return f"{value:.2f} V"
+                return f"{value:.6g} V"
             elif abs_val >= 1e-3:
-                return f"{value*1e3:.2f} mV"
+                return f"{value*1e3:.6g} mV"
             elif abs_val >= 1e-6:
-                return f"{value*1e6:.2f} μV"
+                return f"{value*1e6:.6g} μV"
+            elif abs_val >= 1e-9:
+                return f"{value*1e9:.6g} nV"
             else:
                 return f"{value:.2e} V"
         elif unit == 'A':
             if abs_val >= 1:
-                return f"{value:.2f} A"
+                return f"{value:.6g} A"
             elif abs_val >= 1e-3:
-                return f"{value*1e3:.2f} mA"
+                return f"{value*1e3:.6g} mA"
             elif abs_val >= 1e-6:
-                return f"{value*1e6:.2f} μA"
+                return f"{value*1e6:.6g} μA"
             elif abs_val >= 1e-9:
-                return f"{value*1e9:.2f} nA"
+                return f"{value*1e9:.6g} nA"
             else:
                 return f"{value:.2e} A"
         return f"{value} {unit}"

@@ -65,10 +65,17 @@ class CircuitCanvas(QGraphicsView):
             top = int(rect.top()) - int(rect.top()) % GRID_SIZE
             lines = []
             x = left
-            while x < rect.right(): lines.append(QLineF(x, rect.top(), x, rect.bottom())); x += GRID_SIZE
+            while x < rect.right():
+                lines.append(QLineF(x, rect.top(), x, rect.bottom()))
+                x += GRID_SIZE
             y = top
-            while y < rect.bottom(): lines.append(QLineF(rect.left(), y, rect.right(), y)); y += GRID_SIZE
-            pen = QPen(GRID_COLOR, 1, Qt.PenStyle.DotLine); painter.setPen(pen); painter.drawLines(lines)
+            while y < rect.bottom():
+                lines.append(QLineF(rect.left(), y, rect.right(), y))
+                y += GRID_SIZE
+            pen = QPen(GRID_COLOR, 1, Qt.PenStyle.DotLine)
+            pen.setCosmetic(True)
+            painter.setPen(pen)
+            painter.drawLines(lines)
 
 
     def mousePressEvent(self, event):
@@ -157,26 +164,24 @@ class CircuitCanvas(QGraphicsView):
             return
 
         if self.current_tool == 'wire' and self.start_pin_item and self.temp_wire_path_item:
-             start_pos = self.start_pin_item.scenePos()
-             # Snap end position to grid if enabled, unless hovering over a pin
-             end_pos = pin_item.scenePos() if pin_item else (self.snap_to_grid(scene_pos) if self.snap_to_grid_enabled else scene_pos)
+            start_pos = self.start_pin_item.scenePos()
+            # Snap end position to grid if enabled, unless hovering over a pin
+            end_pos = pin_item.scenePos() if pin_item else (self.snap_to_grid(scene_pos) if self.snap_to_grid_enabled else scene_pos)
+            temp_points = self.generate_orthogonal_points_preview(start_pos, end_pos)
+            path = QPainterPath()
+            if temp_points:
+                path.moveTo(temp_points[0])
+                for i in range(1, len(temp_points)):
+                    path.lineTo(temp_points[i])
+            self.temp_wire_path_item.setPath(path)
 
-             temp_points = self.generate_orthogonal_points_preview(start_pos, end_pos)
-
-             path = QPainterPath()
-             if temp_points:
-                 path.moveTo(temp_points[0])
-                 for i in range(1, len(temp_points)):
-                     path.lineTo(temp_points[i])
-             self.temp_wire_path_item.setPath(path)
-
-
+        # Pin hover feedback
         if self.current_tool in ['wire', None]:
             if self.hovered_pin and self.hovered_pin not in self.scene().items():
-                 self.hovered_pin = None
-
+                self.hovered_pin = None
             if pin_item and pin_item != self.hovered_pin:
-                if self.hovered_pin: self.hovered_pin.setBrush(QBrush(PIN_COLOR_DEFAULT))
+                if self.hovered_pin:
+                    self.hovered_pin.setBrush(QBrush(PIN_COLOR_DEFAULT))
                 self.hovered_pin = pin_item
                 self.hovered_pin.setBrush(QBrush(PIN_COLOR_HOVER))
             elif not pin_item and self.hovered_pin:
@@ -189,71 +194,49 @@ class CircuitCanvas(QGraphicsView):
         if event.button() == Qt.MouseButton.LeftButton:
             if self.current_tool == 'wire' and self.start_pin_item and self.temp_wire_path_item:
                 scene_pos = self.mapToScene(event.pos())
-                # Use a small radius to find nearby pins for connection
-                detection_radius = PIN_SIZE * 1.5 # Adjust radius as needed
-                # Create a QRectF for the detection area
+                detection_radius = PIN_SIZE * 1.5
                 detection_rect = QRectF(scene_pos.x() - detection_radius, scene_pos.y() - detection_radius,
                                         detection_radius * 2, detection_radius * 2)
                 nearby_items = self.scene().items(detection_rect, Qt.ItemSelectionMode.IntersectsItemShape)
-
                 end_pin_item = self.find_pin_at(nearby_items)
-
-
                 if self.temp_wire_path_item and self.temp_wire_path_item.scene():
-                     self.scene().removeItem(self.temp_wire_path_item)
+                    self.scene().removeItem(self.temp_wire_path_item)
                 self.temp_wire_path_item = None
-
                 if end_pin_item and end_pin_item != self.start_pin_item:
-                    if end_pin_item.data(2) != self.start_pin_item.data(2) or end_pin_item != self.start_pin_item:
-                         try:
-                             start_pos = self.start_pin_item.scenePos()
-                             end_pos = end_pin_item.scenePos()
-                             wire_points = self.generate_orthogonal_points(start_pos, end_pos)
-
-                             wire = Wire(self.start_pin_item, end_pin_item)
-                             self.scene().addItem(wire)
-                             self.main_window.netlist.add_wire(wire) # This handles node merging/creation
-                             wire.update_positions()
-
-                             print(f"Wire added between {self.start_pin_item.data(2).component_name} pin {self.start_pin_item.data(1)} and {end_pin_item.data(2).component_name} pin {end_pin_item.data(1)}.")
-                         except ValueError as e: print(f"Error creating wire: {e}")
-                    else:
-                         print("Wire cancelled: Cannot connect a pin to itself or another pin on the same component (currently unsupported).")
-
+                    try:
+                        start_pos = self.start_pin_item.scenePos()
+                        end_pos = end_pin_item.scenePos()
+                        wire_points = self.generate_orthogonal_points(start_pos, end_pos)
+                        wire = Wire(self.start_pin_item, end_pin_item)
+                        self.scene().addItem(wire)
+                        self.main_window.netlist.add_wire(wire)
+                        wire.update_positions()
+                    except ValueError as e:
+                        QMessageBox.warning(self, "Wire Error", f"Error creating wire: {e}")
                 else:
-                    print("Wire cancelled: End point not on a valid pin or same as start pin.")
-
+                    print("Wire cancelled: Cannot connect a pin to itself or another pin on the same component (currently unsupported).")
                 self.start_pin_item = None
-
             else:
                 selected_items = self.scene().selectedItems()
                 moved_components = [item for item in selected_items if isinstance(item, Component)]
-
                 super().mouseReleaseEvent(event)
-
                 wires_to_update = set()
                 for comp in moved_components:
                     for wire in comp.connected_wires:
-                         wires_to_update.add(wire)
-
+                        wires_to_update.add(wire)
                 for wire in wires_to_update:
                     if wire.scene():
                         wire.update_positions()
-
                 self.update_node_visuals()
-
                 if moved_components and hasattr(self.main_window, 'hide_simulation_results'):
-                     self.main_window.hide_simulation_results()
-
-
+                    self.main_window.hide_simulation_results()
         elif event.button() == Qt.MouseButton.MiddleButton:
             self._pan_start_pos = event.pos()
             self._panning = False
             self.setCursor(Qt.CursorShape.ArrowCursor)
             event.accept()
-
         else:
-             super().mouseReleaseEvent(event)
+            super().mouseReleaseEvent(event)
 
     def wheelEvent(self, event):
         delta = event.angleDelta().y()
