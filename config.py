@@ -193,10 +193,14 @@ class Component(QGraphicsItemGroup):
 
 
     def remove(self):
-        """Removes component from scene and netlist."""
         scene = self.scene()
         if not scene:
             return
+        # Remove all connected wires first
+        connected_wires = list(self.connected_wires)  # Copy to avoid modification during iteration
+        for wire in connected_wires:
+            if wire.scene():
+                wire.remove()
         # Remove from netlist if possible
         views = scene.views()
         if views:

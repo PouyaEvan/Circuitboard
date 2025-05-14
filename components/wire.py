@@ -108,7 +108,7 @@ class Wire(QGraphicsPathItem):
             self._current_arrow = None
         if abs(current_value) < 1e-12:
             return  # Don't show arrow for zero current
-        # Draw arrow in the middle of the wire
+        # Draw a filled triangle arrow in the middle of the wire
         if self._points and len(self._points) >= 2:
             mid_idx = len(self._points) // 2
             p1 = self._points[mid_idx - 1]
@@ -125,30 +125,33 @@ class Wire(QGraphicsPathItem):
             if direction == -1:
                 ux, uy = -ux, -uy
             arrow_len = 18
-            arrow_w = 6
+            arrow_w = 8
             xm = (p1.x() + p2.x()) / 2
             ym = (p1.y() + p2.y()) / 2
+            # Arrow tip
             x_tip = xm + ux * arrow_len / 2
             y_tip = ym + uy * arrow_len / 2
+            # Arrow base center
             x_base = xm - ux * arrow_len / 2
             y_base = ym - uy * arrow_len / 2
-            # Arrow shaft
-            arrow_path = QPainterPath()
-            arrow_path.moveTo(x_base, y_base)
-            arrow_path.lineTo(x_tip, y_tip)
-            # Arrow head
-            left_x = x_tip - ux * arrow_w - uy * arrow_w
-            left_y = y_tip - uy * arrow_w + ux * arrow_w
-            right_x = x_tip - ux * arrow_w + uy * arrow_w
-            right_y = y_tip - uy * arrow_w - ux * arrow_w
-            arrow_path.moveTo(x_tip, y_tip)
-            arrow_path.lineTo(left_x, left_y)
-            arrow_path.moveTo(x_tip, y_tip)
-            arrow_path.lineTo(right_x, right_y)
-            from PyQt6.QtWidgets import QGraphicsPathItem
-            from PyQt6.QtGui import QPen
-            arrow_item = QGraphicsPathItem(arrow_path, self)
-            arrow_item.setPen(QPen(QColor(200, 0, 0), 2))
+            # Perpendicular vector for width
+            perp_ux, perp_uy = -uy, ux
+            # Triangle points
+            left_x = x_base + perp_ux * arrow_w / 2
+            left_y = y_base + perp_uy * arrow_w / 2
+            right_x = x_base - perp_ux * arrow_w / 2
+            right_y = y_base - perp_uy * arrow_w / 2
+            from PyQt6.QtWidgets import QGraphicsPolygonItem
+            from PyQt6.QtGui import QPolygonF, QBrush
+            from PyQt6.QtCore import QPointF
+            triangle = QPolygonF([
+                QPointF(x_tip, y_tip),
+                QPointF(left_x, left_y),
+                QPointF(right_x, right_y)
+            ])
+            arrow_item = QGraphicsPolygonItem(triangle, self)
+            arrow_item.setBrush(QBrush(QColor(200, 0, 0)))
+            arrow_item.setPen(QPen(QColor(200, 0, 0), 1))
             arrow_item.setZValue(self.zValue() + 0.2)
             self._current_arrow = arrow_item
 
