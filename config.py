@@ -300,21 +300,23 @@ class Component(QGraphicsItemGroup):
              current_text = self.current_text_items[0]
 
         if isinstance(current_value, (int, float)):
-             if abs(current_value) >= 1e-3:
-                  display_value = current_value * 1e3
-                  unit = "mA"
-             elif abs(current_value) >= 1e-6:
-                  display_value = current_value * 1e6
-                  unit = "μA"
-             elif abs(current_value) >= 1e-9:
-                  display_value = current_value * 1e9
-                  unit = "nA"
-             else:
-                  display_value = current_value
-                  unit = "A"
-             text = f"{display_value:.2f} {unit}"
+            arrow = "→" if current_value >= 0 else "←"
+            abs_value = abs(current_value)
+            if abs_value >= 1e-3:
+                display_value = abs_value * 1e3
+                unit = "mA"
+            elif abs_value >= 1e-6:
+                display_value = abs_value * 1e6
+                unit = "μA"
+            elif abs_value >= 1e-9:
+                display_value = abs_value * 1e9
+                unit = "nA"
+            else:
+                display_value = abs_value
+                unit = "A"
+            text = f"{display_value:.2f} {unit} {arrow}"
         else:
-             text = str(current_value)
+            text = str(current_value)
 
         current_text.setPlainText(text)
 

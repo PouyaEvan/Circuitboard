@@ -585,7 +585,8 @@ class CircuitSimulator:
                 elif current_val is None or (isinstance(current_val, float) and (np.isnan(current_val) or np.isinf(current_val))):
                     continue
                 else:
-                    description += f"  {component.component_name} ({current_label}): {self._format_value_with_unit(current_val, 'A')}\n"
+                    arrow = "→" if current_val >= 0 else "←"
+                    description += f"  {component.component_name} ({current_label}): {self._format_value_with_unit(abs(current_val), 'A')} {arrow}\n"
         else:
             description += "  No component current data.\n"
 
@@ -605,12 +606,13 @@ class CircuitSimulator:
                             end_pin_name = wire.end_pin.data(1)
                             wire_id_str = f"{start_pin_comp.component_name}.{start_pin_name} to {end_pin_comp.component_name}.{end_pin_name}"
                             flow_desc = "No current"
+                            arrow = "→" if direction == 1 else ("←" if direction == -1 else "-")
                             if abs(current_val) > 1e-9:
                                 if direction == 1:
                                     flow_desc = f"Conventional current from {start_pin_comp.component_name}.{start_pin_name} to {end_pin_comp.component_name}.{end_pin_name}"
                                 elif direction == -1:
                                     flow_desc = f"Conventional current from {end_pin_comp.component_name}.{end_pin_name} to {start_pin_comp.component_name}.{start_pin_name}"
-                            description += f"  Wire ({wire_id_str}): {self._format_value_with_unit(current_val, 'A')} ({flow_desc})\n"
+                            description += f"  Wire ({wire_id_str}): {self._format_value_with_unit(abs(current_val), 'A')} {arrow} ({flow_desc})\n"
                             processed_wires.add(wire)
                             found_current_for_wire = True
                             break
@@ -622,9 +624,9 @@ class CircuitSimulator:
                         wire_id_str = f"{start_pin_comp.component_name}.{start_pin_name} to {end_pin_comp.component_name}.{end_pin_name}"
                         zero_current_entry = self.wire_currents.get((wire_obj, 0))
                         if zero_current_entry is not None:
-                             description += f"  Wire ({wire_id_str}): {self._format_value_with_unit(zero_current_entry, 'A')} (No current)\n"
+                             description += f"  Wire ({wire_id_str}): {self._format_value_with_unit(abs(zero_current_entry), 'A')} - (No current)\n"
                         else:
-                             description += f"  Wire ({wire_id_str}): 0.00 A (No current / Not in results)\n"
+                             description += f"  Wire ({wire_id_str}): 0.00 A - (No current / Not in results)\n"
                         processed_wires.add(wire_obj)
             else:
                 description += "  No wire current data.\n"

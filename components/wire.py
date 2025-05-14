@@ -99,3 +99,93 @@ class Wire(QGraphicsPathItem):
         }
         return data
 
+    def show_current_arrow(self, current_value, direction):
+        # Remove any existing arrow
+        if hasattr(self, '_current_arrow') and self._current_arrow:
+            scene = self.scene()
+            if scene and self._current_arrow.scene():
+                scene.removeItem(self._current_arrow)
+            self._current_arrow = None
+        if abs(current_value) < 1e-12:
+            return  # Don't show arrow for zero current
+        # Draw arrow in the middle of the wire
+        if self._points and len(self._points) >= 2:
+            mid_idx = len(self._points) // 2
+            p1 = self._points[mid_idx - 1]
+            p2 = self._points[mid_idx]
+            # Arrow direction: → for direction==1, ← for direction==-1
+            if direction == 0:
+                return
+            dx = p2.x() - p1.x()
+            dy = p2.y() - p1.y()
+            length = (dx**2 + dy**2) ** 0.5
+            if length == 0:
+                return
+            ux, uy = dx / length, dy / length
+            if direction == -1:
+                ux, uy = -ux, -uy
+            arrow_len = 18
+            arrow_w = 6
+            xm = (p1.x() + p2.x()) / 2
+            ym = (p1.y() + p2.y()) / 2
+            x_tip = xm + ux * arrow_len / 2
+            y_tip = ym + uy * arrow_len / 2
+            x_base = xm - ux * arrow_len / 2
+            y_base = ym - uy * arrow_len / 2
+            # Arrow shaft
+            arrow_path = QPainterPath()
+            arrow_path.moveTo(x_base, y_base)
+            arrow_path.lineTo(x_tip, y_tip)
+            # Arrow head
+            left_x = x_tip - ux * arrow_w - uy * arrow_w
+            left_y = y_tip - uy * arrow_w + ux * arrow_w
+            right_x = x_tip - ux * arrow_w + uy * arrow_w
+            right_y = y_tip - uy * arrow_w - ux * arrow_w
+            arrow_path.moveTo(x_tip, y_tip)
+            arrow_path.lineTo(left_x, left_y)
+            arrow_path.moveTo(x_tip, y_tip)
+            arrow_path.lineTo(right_x, right_y)
+            from PyQt6.QtWidgets import QGraphicsPathItem
+            from PyQt6.QtGui import QPen
+            arrow_item = QGraphicsPathItem(arrow_path, self)
+            arrow_item.setPen(QPen(QColor(200, 0, 0), 2))
+            arrow_item.setZValue(self.zValue() + 0.2)
+            self._current_arrow = arrow_item
+
+    # Optionally, call this after updating wire current results from simulation
+    def update_current_visual(self, current_value, direction):
+        self.show_current_arrow(current_value, direction)
+        # Show current value as text (absolute value)
+        if hasattr(self, '_current_text') and self._current_text:
+            scene = self.scene()
+            if scene and self._current_text.scene():
+                scene.removeItem(self._current_text)
+            self._current_text = None
+        if abs(current_value) < 1e-12:
+            return
+        from PyQt6.QtWidgets import QGraphicsTextItem
+        abs_value = abs(current_value)
+        if abs_value >= 1e-3:
+            display_value = abs_value * 1e3
+            unit = "mA"
+        elif abs_value >= 1e-6:
+            display_value = abs_value * 1e6
+            unit = "μA"
+        elif abs_value >= 1e-9:
+            display_value = abs_value * 1e9
+            unit = "nA"
+        else:
+            display_value = abs_value
+            unit = "A"
+        arrow = "→" if direction == 1 else ("←" if direction == -1 else "-")
+        text = f"{display_value:.2f} {unit} {arrow}"
+        mid_idx = len(self._points) // 2
+        xm = (self._points[mid_idx - 1].x() + self._points[mid_idx].x()) / 2
+        ym = (self._points[mid_idx - 1].y() + self._points[mid_idx].y()) / 2
+        text_item = QGraphicsTextItem(text, self)
+        text_item.setFont(QFont("Segoe UI", 8))
+        text_item.setDefaultTextColor(QColor(200, 0, 0))
+        text_item.setZValue(self.zValue() + 0.3)
+        text_item.setPos(xm, ym)
+        self._current_text = text_item
+
