@@ -12,6 +12,13 @@ from PyQt6.QtGui import (QAction, QIcon, QPainter, QPen, QBrush, QColor, QFont,
 from PyQt6.QtPrintSupport import QPrintDialog, QPrinter
 from PyQt6.QtCore import (Qt, QPointF, QRectF, QLineF, QByteArray, QDataStream,
                           QIODevice)
+from gui.canvas import CircuitCanvas
+from components.resistor import Resistor
+from components.vs import VoltageSource
+from components.cs import CurrentSource
+from components.inductor import Inductor
+from components.capacitor import Capacitor
+from components.ground import Ground
 
 GRID_SIZE = 20
 GRID_COLOR = QColor(220, 220, 220)
@@ -142,7 +149,8 @@ class Component(QGraphicsItemGroup):
             new_pos = value
             if hasattr(self.scene(), 'views') and self.scene().views():
                  canvas = self.scene().views()[0]
-                 if isinstance(canvas, CircuitCanvas) and canvas.snap_to_grid_enabled:
+                 # Snap only if the view has snap_to_grid_enabled attribute
+                 if getattr(canvas, 'snap_to_grid_enabled', False):
                       snapped_x = round(new_pos.x() / GRID_SIZE) * GRID_SIZE
                       snapped_y = round(new_pos.y() / GRID_SIZE) * GRID_SIZE
                       return QPointF(snapped_x, snapped_y)
@@ -199,13 +207,11 @@ class Component(QGraphicsItemGroup):
             wire.remove()
 
         if hasattr(scene, 'views') and scene.views():
-             for view in scene.views():
-                  if isinstance(view, CircuitCanvas):
-                       if view.hovered_pin and view.hovered_pin not in self._pins:
-                            pass
-                       elif view.hovered_pin in self._pins:
-                            view.hovered_pin = None
-                            print(f"Cleared hovered pin reference for deleted component {self.component_name}")
+            for view in scene.views():
+                # Clear hovered pin reference on any view that tracks hover
+                if hasattr(view, 'hovered_pin') and view.hovered_pin in self._pins:
+                    view.hovered_pin = None
+                    print(f"Cleared hovered pin reference for deleted component {self.component_name}")
         if isinstance(scene, QGraphicsScene):
              if hasattr(scene, 'views') and scene.views():
                  main_window = scene.views()[0].main_window
