@@ -1195,7 +1195,7 @@ class MainWindow(QMainWindow):
             }
         """)
         # Initialize application menus
-        self.init_menus()
+        self.setup_menubar() # Changed from self.init_menus()
 
         self.component_counters = {"R": 0, "V": 0, "L": 0, "C": 0, "I": 0, "Other": 0, "GND": 0}
         self.used_component_names = {"R": set(), "V": set(), "L": set(), "C": set(), "I": set(), "Other": set(), "GND": set()}

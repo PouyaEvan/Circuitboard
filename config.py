@@ -261,17 +261,23 @@ class Component(QGraphicsItemGroup):
 
         component = None
         if comp_type == "Resistor":
+            from components import Resistor
             component = Resistor(name, position, properties.get("Resistance", 1000.0))
         elif comp_type == "VoltageSource":
+            from components import VoltageSource
             component = VoltageSource(name, position, properties.get("Voltage", 5.0))
         elif comp_type == "CurrentSource":
-             component = CurrentSource(name, position, properties.get("Current", 1.0))
+            from components import CurrentSource
+            component = CurrentSource(name, position, properties.get("Current", 1.0))
         elif comp_type == "Inductor":
-             component = Inductor(name, position, properties.get("Inductance", 1e-3))
+            from components import Inductor
+            component = Inductor(name, position, properties.get("Inductance", 1e-3))
         elif comp_type == "Capacitor":
-             component = Capacitor(name, position, properties.get("Capacitance", 1e-6))
+            from components import Capacitor
+            component = Capacitor(name, position, properties.get("Capacitance", 1e-6))
         elif comp_type == "Ground":
-             component = Ground(name, position)
+            from components import Ground
+            component = Ground(name, position)
 
 
         if component:
