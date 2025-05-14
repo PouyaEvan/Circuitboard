@@ -23,23 +23,18 @@ class Inductor(Component):
         body_width = GRID_SIZE * 4
         lead_length = GRID_SIZE
 
-        # Inductor coils
+        # Inductor coils: draw uniform semicircles for precision
         coil_count = 6
-        coil_amplitude = GRID_SIZE * 0.6
-        coil_period = body_width / coil_count
-
+        turn_spacing = body_width / (coil_count)
+        coil_radius = turn_spacing / 2
         coil_path = QPainterPath()
-        coil_path.moveTo(0, 0)
+        # Start at first coil entry point
+        coil_path.moveTo(lead_length, 0)
+        # Draw each semicircular arc
         for i in range(coil_count):
-            start_x = i * coil_period
-            end_x = (i + 1) * coil_period
-            mid_x = (start_x + end_x) / 2
-            if i % 2 == 0:
-                # Peak up
-                coil_path.quadTo(mid_x, -coil_amplitude, end_x, 0)
-            else:
-                # Peak down
-                coil_path.quadTo(mid_x, coil_amplitude, end_x, 0)
+            rect_x = lead_length + i * (2 * coil_radius)
+            # arcTo(x, y, w, h, startAngle, sweepLength)
+            coil_path.arcTo(rect_x, -coil_radius, 2 * coil_radius, 2 * coil_radius, 180, -180)
 
         coil_item = QGraphicsPathItem(coil_path, self)
         coil_item.setPen(QPen(Qt.GlobalColor.black, 2))

@@ -12,7 +12,6 @@ from PyQt6.QtGui import (QAction, QIcon, QPainter, QPen, QBrush, QColor, QFont,
 from PyQt6.QtCore import Qt
 
 from config import *
-from gui.canvas import CircuitCanvas
 
 
 class Wire(QGraphicsPathItem):

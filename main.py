@@ -6,7 +6,8 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                              QGraphicsLineItem, QGraphicsEllipseItem, QGraphicsTextItem,
                              QGraphicsItemGroup, QMenu, QInputDialog, QMessageBox,
                              QGraphicsPathItem, QFileDialog, QDockWidget, QListWidget,
-                             QLabel, QLineEdit, QFormLayout, QPushButton, QCheckBox)
+                             QLabel, QLineEdit, QFormLayout, QPushButton, QCheckBox,
+                             QDialog, QDialogButtonBox, QDoubleSpinBox, QTextEdit)
 from PyQt6.QtGui import (QAction, QIcon, QPainter, QPen, QBrush, QColor, QFont,
                          QTransform, QFontMetrics, QPainterPath, QKeySequence)
 from PyQt6.QtPrintSupport import QPrintDialog, QPrinter
@@ -17,7 +18,6 @@ from gui.canvas import CircuitCanvas
 
 from config import *
 
-from gui.canvas import CircuitCanvas
 from components.wire import Wire
 from components.capacitor import Capacitor
 from components.ground import Ground
@@ -25,7 +25,6 @@ from components.inductor import Inductor
 from components.resistor import Resistor
 from components.vs import VoltageSource
 from components.cs import CurrentSource
-from gui.canvas import Component
 try:
     import numpy as np
     NUMPY_AVAILABLE = True
@@ -927,6 +926,55 @@ class CircuitSimulator:
 
         return current_magnitude, direction
 
+    def simulate_transient(self, t_end, dt, progress_callback=None):
+        """Simulates transient behavior for simple circuits (RC, RL, RLC)."""
+        import numpy as np
+        # Identify components
+        resistors = [c for c in self.netlist.components if hasattr(c, 'resistance')]
+        capacitors = [c for c in self.netlist.components if hasattr(c, 'capacitance')]
+        inductors = [c for c in self.netlist.components if hasattr(c, 'inductance')]
+        vsources = [c for c in self.netlist.components if hasattr(c, 'voltage')]
+        num_steps = int(t_end / dt) + 1
+        times = np.linspace(0, t_end, num_steps)
+        # RC series circuit
+        if len(resistors)==1 and len(capacitors)==1 and len(vsources)==1 and not inductors:
+            R = resistors[0].resistance
+            C = capacitors[0].capacitance
+            V = vsources[0].voltage
+            tau = R * C
+            voltage = V * (1 - np.exp(-times / tau))
+            for i, t in enumerate(times):
+                if progress_callback: progress_callback(int(i/(num_steps-1)*100))
+            return {'time': times, 'voltage': voltage}
+        # RL series circuit
+        if len(resistors)==1 and len(inductors)==1 and len(vsources)==1 and not capacitors:
+            R = resistors[0].resistance
+            L = inductors[0].inductance
+            V = vsources[0].voltage
+            alpha = R / L
+            current = V / R * (1 - np.exp(-alpha * times))
+            for i, t in enumerate(times):
+                if progress_callback: progress_callback(int(i/(num_steps-1)*100))
+            return {'time': times, 'voltage': current}
+        # RLC series underdamped circuit
+        if len(resistors)==1 and len(capacitors)==1 and len(inductors)==1 and len(vsources)==1:
+            R = resistors[0].resistance; L = inductors[0].inductance; C = capacitors[0].capacitance; V = vsources[0].voltage
+            alpha = R/(2*L); omega0 = 1/np.sqrt(L*C)
+            if alpha < omega0:
+                omega_d = np.sqrt(omega0**2 - alpha**2)
+                # Voltage across capacitor
+                A = V
+                B = (alpha/(omega_d))*V
+                voltage = V - np.exp(-alpha*times)*(A*np.cos(omega_d*times) + B*np.sin(omega_d*times))
+                for i, t in enumerate(times):
+                    if progress_callback: progress_callback(int(i/(num_steps-1)*100))
+                return {'time': times, 'voltage': voltage}
+        # Fallback: constant DC
+        self.run_dc_analysis()
+        voltage = np.array([self.node_voltages.get(n.node_id,0.0) for n in self.netlist.nodes.values()])
+        voltage = np.tile(voltage[0] if voltage.size else 0.0, num_steps)
+        if progress_callback: progress_callback(100)
+        return {'time': times, 'voltage': voltage}
 
 
 
@@ -1146,7 +1194,8 @@ class MainWindow(QMainWindow):
                 background-color: #c0c0c0;
             }
         """)
-
+        # Initialize application menus
+        self.init_menus()
 
         self.component_counters = {"R": 0, "V": 0, "L": 0, "C": 0, "I": 0, "Other": 0, "GND": 0}
         self.used_component_names = {"R": set(), "V": set(), "L": set(), "C": set(), "I": set(), "Other": set(), "GND": set()}
@@ -1861,6 +1910,109 @@ class MainWindow(QMainWindow):
             print("Circuit printed.")
         else:
             print("Print cancelled.")
+
+    def init_menus(self):
+        menu_bar = self.menuBar()
+        # File menu
+        file_menu = menu_bar.addMenu("&File")
+        exit_action = QAction("E&xit", self)
+        exit_action.triggered.connect(self.close)
+        file_menu.addAction(exit_action)
+        # Analysis menu
+        analysis_menu = menu_bar.addMenu("&Analysis")
+        transient_action = QAction("Transient Analysis", self)
+        transient_action.triggered.connect(self.run_transient_analysis)
+        analysis_menu.addAction(transient_action)
+        # Help menu
+        help_menu = menu_bar.addMenu("&Help")
+        instr_action = QAction("Instructions", self)
+        instr_action.triggered.connect(self.show_instructions)
+        changelog_action = QAction("Changelog", self)
+        changelog_action.triggered.connect(self.show_changelog)
+        help_menu.addAction(instr_action)
+        help_menu.addAction(changelog_action)
+
+    def run_transient_analysis(self):
+        # Prompt for simulation settings
+        dlg = SettingsDialog(self)
+        if dlg.exec() == QDialog.DialogCode.Accepted:
+            t_end, t_step = dlg.time_end, dlg.time_step
+            simulator = self.netlist_simulator
+            # Show progress dialog
+            from PyQt6.QtWidgets import QProgressDialog
+            progress = QProgressDialog('Simulating transient...', 'Cancel', 0, 100, self)
+            progress.setWindowTitle('Transient Analysis')
+            progress.setWindowModality(Qt.WindowModality.WindowModal)
+            def update_progress(val):
+                progress.setValue(val)
+                QApplication.processEvents()
+                if progress.wasCanceled():
+                    raise InterruptedError('Simulation canceled')
+            try:
+                results = simulator.simulate_transient(t_end, t_step, update_progress)
+                progress.setValue(100)
+                if MATPLOTLIB_AVAILABLE:
+                    import matplotlib.pyplot as plt
+                    plt.figure()
+                    plt.plot(results['time'], results['voltage'])
+                    plt.title('Transient Response')
+                    plt.xlabel('Time (s)')
+                    plt.ylabel('Voltage (V)')
+                    plt.show()
+                else:
+                    QMessageBox.warning(self, 'Simulation', 'Matplotlib not available.')
+            except InterruptedError:
+                QMessageBox.information(self, 'Simulation', 'Transient simulation canceled.')
+
+    def show_instructions(self):
+        dlg = InstructionsDialog(self)
+        dlg.exec()
+
+    def show_changelog(self):
+        QMessageBox.information(self, 'Changelog', open('CHANGELOG.md').read())
+
+
+from PyQt6.QtWidgets import QDialog, QFormLayout, QDialogButtonBox
+
+class SettingsDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle('Transient Analysis Settings')
+        layout = QFormLayout(self)
+        self.time_end = 1.0
+        self.time_step = 0.01
+        from PyQt6.QtWidgets import QDoubleSpinBox
+        sb_end = QDoubleSpinBox(); sb_end.setValue(self.time_end); sb_end.setSuffix(' s')
+        sb_step = QDoubleSpinBox(); sb_step.setValue(self.time_step); sb_step.setSuffix(' s')
+        layout.addRow('End Time:', sb_end)
+        layout.addRow('Time Step:', sb_step)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        buttons.accepted.connect(lambda: self.accept_settings(sb_end.value(), sb_step.value()))
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+
+    def accept_settings(self, end, step):
+        self.time_end = end
+        self.time_step = step
+        self.accept()
+
+class InstructionsDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle('Instructions')
+        from PyQt6.QtWidgets import QTextEdit, QVBoxLayout
+        layout = QVBoxLayout(self)
+        text = QTextEdit(self); text.setReadOnly(True)
+        text.setPlainText('''  Welcome to CircuitSimulator V0.5 Beta
+
+- Use the toolbar to place components.
+- Draw wires by selecting the wire tool and clicking pins.
+- Use the Analysis menu for DC and transient simulations.
+- Access settings to configure simulation parameters.
+- Press Delete to remove selections.
+- View this help under Help > Instructions.
+''')
+        layout.addWidget(text)
 
 
 if __name__ == "__main__":
