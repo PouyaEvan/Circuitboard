@@ -16,7 +16,7 @@ from PyQt6.QtCore import (Qt, QPointF, QRectF, QLineF, QByteArray, QDataStream,
 
 from gui.canvas import CircuitCanvas
 
-from config import *
+from Cconfig import *
 
 from components.wire import Wire
 from components.capacitor import Capacitor

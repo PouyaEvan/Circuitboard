@@ -19,7 +19,7 @@ except ImportError:
     NUMPY_AVAILABLE = False
     print("Warning: NumPy not found. Some resistor features will be limited.")
 
-from config import Component, GRID_SIZE, QGraphicsRectItem, QLinearGradient, QColor, QBrush, QPen, Qt, QPointF, QGraphicsLineItem, QGraphicsTextItem, QMessageBox, RESISTOR_VALUE_MAP, RESISTOR_MULTIPLIER_MAP
+from Cconfig import Component, GRID_SIZE, QGraphicsRectItem, QLinearGradient, QColor, QBrush, QPen, Qt, QPointF, QGraphicsLineItem, QGraphicsTextItem, QMessageBox, RESISTOR_VALUE_MAP, RESISTOR_MULTIPLIER_MAP
 
 def get_resistor_color_code(resistance):
     if not NUMPY_AVAILABLE:
