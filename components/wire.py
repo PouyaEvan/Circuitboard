@@ -11,7 +11,7 @@ from PyQt6.QtGui import (QAction, QIcon, QPainter, QPen, QBrush, QColor, QFont,
                          QTransform, QFontMetrics, QPainterPath, QKeySequence)
 from PyQt6.QtCore import Qt
 
-from Cconfig import *
+from config import *
 
 
 class Wire(QGraphicsPathItem):

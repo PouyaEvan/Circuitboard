@@ -11,7 +11,7 @@ from PyQt6.QtGui import (QAction, QIcon, QPainter, QPen, QBrush, QColor, QFont,
                          QTransform, QFontMetrics, QPainterPath, QKeySequence)
 from PyQt6.QtCore import Qt, QPointF, QRectF, QLineF
 
-from Cconfig import *
+from config import *
 from components.wire import Wire
 from components.capacitor import Capacitor, Component
 from components.ground import Ground

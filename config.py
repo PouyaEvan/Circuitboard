@@ -13,6 +13,7 @@ from PyQt6.QtPrintSupport import QPrintDialog, QPrinter
 from PyQt6.QtCore import (Qt, QPointF, QRectF, QLineF, QByteArray, QDataStream,
                           QIODevice)
 from components.resistor import Resistor
+
 from components.vs import VoltageSource
 from components.cs import CurrentSource
 from components.inductor import Inductor
