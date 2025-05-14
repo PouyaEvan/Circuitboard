@@ -660,21 +660,21 @@ class CircuitSimulator:
                                     # Assign current magnitude and direction to wires connected to resistor pins
                                     for wire in wires_connected_to_in:
                                          if current > 1e-9: # Current flows from in to out
-                                              if wire.start_pin == pin_in: self.wire_currents[(wire, -1)] = current_magnitude # Electron flow into pin_in
-                                              elif wire.end_pin == pin_in: self.wire_currents[(wire, 1)] = current_magnitude # Electron flow out of pin_in
+                                              if wire.start_pin == pin_in: self.wire_currents[(wire, 1)] = current_magnitude # Conventional current flow out of pin_in
+                                              elif wire.end_pin == pin_in: self.wire_currents[(wire, -1)] = current_magnitude # Conventional current flow into pin_in
                                          elif current < -1e-9: # Current flows from out to in
-                                              if wire.start_pin == pin_in: self.wire_currents[(wire, 1)] = current_magnitude # Electron flow out of pin_in
-                                              elif wire.end_pin == pin_in: self.wire_currents[(wire, -1)] = current_magnitude # Electron flow into pin_in
+                                              if wire.start_pin == pin_in: self.wire_currents[(wire, -1)] = current_magnitude # Conventional current flow into pin_in
+                                              elif wire.end_pin == pin_in: self.wire_currents[(wire, 1)] = current_magnitude # Conventional current flow out of pin_in
                                          else:
                                               self.wire_currents[(wire, 0)] = 0.0 # Zero current
 
                                     for wire in wires_connected_to_out:
                                          if current > 1e-9: # Current flows from in to out
-                                              if wire.start_pin == pin_out: self.wire_currents[(wire, 1)] = current_magnitude # Electron flow out of pin_out
-                                              elif wire.end_pin == pin_out: self.wire_currents[(wire, -1)] = current_magnitude # Electron flow into pin_out
+                                              if wire.start_pin == pin_out: self.wire_currents[(wire, -1)] = current_magnitude # Conventional current flow into pin_out
+                                              elif wire.end_pin == pin_out: self.wire_currents[(wire, 1)] = current_magnitude # Conventional current flow out of pin_out
                                          elif current < -1e-9: # Current flows from out to in
-                                              if wire.start_pin == pin_out: self.wire_currents[(wire, -1)] = current_magnitude # Electron flow into pin_out
-                                              elif wire.end_pin == pin_out: self.wire_currents[(wire, 1)] = current_magnitude # Electron flow out of pin_out
+                                              if wire.start_pin == pin_out: self.wire_currents[(wire, 1)] = current_magnitude # Conventional current flow out of pin_out
+                                              elif wire.end_pin == pin_out: self.wire_currents[(wire, -1)] = current_magnitude # Conventional current flow into pin_out
                                          else:
                                               self.wire_currents[(wire, 0)] = 0.0 # Zero current
 
@@ -708,21 +708,21 @@ class CircuitSimulator:
                                # Assign current magnitude and direction to wires connected to voltage source pins
                                for wire in wires_pos:
                                     if vs_current > 1e-9: # Current flows out of +
-                                         if wire.start_pin == pin_pos: self.wire_currents[(wire, -1)] = current_magnitude # Electron flow into pin_pos
-                                         elif wire.end_pin == pin_pos: self.wire_currents[(wire, 1)] = current_magnitude # Electron flow out of pin_pos
+                                         if wire.start_pin == pin_pos: self.wire_currents[(wire, 1)] = current_magnitude # Conventional current flow out of pin_pos
+                                         elif wire.end_pin == pin_pos: self.wire_currents[(wire, -1)] = current_magnitude # Conventional current flow into pin_pos
                                     elif vs_current < -1e-9: # Current flows into +
-                                         if wire.start_pin == pin_pos: self.wire_currents[(wire, 1)] = current_magnitude # Electron flow out of pin_pos
-                                         elif wire.end_pin == pin_pos: self.wire_currents[(wire, -1)] = current_magnitude # Electron flow into pin_pos
+                                         if wire.start_pin == pin_pos: self.wire_currents[(wire, -1)] = current_magnitude # Conventional current flow into pin_pos
+                                         elif wire.end_pin == pin_pos: self.wire_currents[(wire, 1)] = current_magnitude # Conventional current flow out of pin_pos
                                     else:
                                          self.wire_currents[(wire, 0)] = 0.0
 
                                for wire in wires_neg:
                                     if vs_current > 1e-9: # Current flows out of + (into -)
-                                         if wire.start_pin == pin_neg: self.wire_currents[(wire, 1)] = current_magnitude # Electron flow out of pin_neg
-                                         elif wire.end_pin == pin_neg: self.wire_currents[(wire, -1)] = current_magnitude # Electron flow into pin_neg
+                                         if wire.start_pin == pin_neg: self.wire_currents[(wire, -1)] = current_magnitude # Conventional current flow into pin_neg
+                                         elif wire.end_pin == pin_neg: self.wire_currents[(wire, 1)] = current_magnitude # Conventional current flow out of pin_neg
                                     elif vs_current < -1e-9: # Current flows into + (out of -)
-                                         if wire.start_pin == pin_neg: self.wire_currents[(wire, -1)] = current_magnitude # Electron flow into pin_neg
-                                         elif wire.end_pin == pin_neg: self.wire_currents[(wire, 1)] = current_magnitude # Electron flow out of pin_neg
+                                         if wire.start_pin == pin_neg: self.wire_currents[(wire, 1)] = current_magnitude # Conventional current flow out of pin_neg
+                                         elif wire.end_pin == pin_neg: self.wire_currents[(wire, -1)] = current_magnitude # Conventional current flow into pin_neg
                                     else:
                                          self.wire_currents[(wire, 0)] = 0.0
 
@@ -745,21 +745,21 @@ class CircuitSimulator:
                           # Assign current magnitude and direction to wires connected to current source pins
                           for wire in wires_pos:
                                if current > 1e-9: # Current flows out of +
-                                    if wire.start_pin == pin_pos: self.wire_currents[(wire, -1)] = current_magnitude # Electron flow into pin_pos
-                                    elif wire.end_pin == pin_pos: self.wire_currents[(wire, 1)] = current_magnitude # Electron flow out of pin_pos
+                                    if wire.start_pin == pin_pos: self.wire_currents[(wire, 1)] = current_magnitude # Conventional current flow out of pin_pos
+                                    elif wire.end_pin == pin_pos: self.wire_currents[(wire, -1)] = current_magnitude # Conventional current flow into pin_pos
                                elif current < -1e-9: # Current flows into +
-                                    if wire.start_pin == pin_pos: self.wire_currents[(wire, 1)] = current_magnitude # Electron flow out of pin_pos
-                                    elif wire.end_pin == pin_pos: self.wire_currents[(wire, -1)] = current_magnitude # Electron flow into pin_pos
+                                    if wire.start_pin == pin_pos: self.wire_currents[(wire, -1)] = current_magnitude # Conventional current flow into pin_pos
+                                    elif wire.end_pin == pin_pos: self.wire_currents[(wire, 1)] = current_magnitude # Conventional current flow out of pin_pos
                                else:
                                     self.wire_currents[(wire, 0)] = 0.0
 
                           for wire in wires_neg:
                                if current > 1e-9: # Current flows out of + (into -)
-                                    if wire.start_pin == pin_neg: self.wire_currents[(wire, 1)] = current_magnitude # Electron flow out of pin_neg
-                                    elif wire.end_pin == pin_neg: self.wire_currents[(wire, -1)] = current_magnitude # Electron flow into pin_neg
+                                    if wire.start_pin == pin_neg: self.wire_currents[(wire, -1)] = current_magnitude # Conventional current flow into pin_neg
+                                    elif wire.end_pin == pin_neg: self.wire_currents[(wire, 1)] = current_magnitude # Conventional current flow out of pin_neg
                                elif current < -1e-9: # Current flows into + (out of -)
-                                    if wire.start_pin == pin_neg: self.wire_currents[(wire, -1)] = current_magnitude # Electron flow into pin_neg
-                                    elif wire.end_pin == pin_neg: self.wire_currents[(wire, 1)] = current_magnitude # Electron flow out of pin_neg
+                                    if wire.start_pin == pin_neg: self.wire_currents[(wire, 1)] = current_magnitude # Conventional current flow out of pin_neg
+                                    elif wire.end_pin == pin_neg: self.wire_currents[(wire, -1)] = current_magnitude # Conventional current flow into pin_neg
                                else:
                                     self.wire_currents[(wire, 0)] = 0.0
 
@@ -783,21 +783,21 @@ class CircuitSimulator:
                                # Assign current magnitude and direction to wires connected to inductor pins
                                for wire in wires_in:
                                     if ind_current > 1e-9: # Current flows from in to out
-                                         if wire.start_pin == pin_in: self.wire_currents[(wire, -1)] = current_magnitude # Electron flow into pin_in
-                                         elif wire.end_pin == pin_in: self.wire_currents[(wire, 1)] = current_magnitude # Electron flow out of pin_in
+                                         if wire.start_pin == pin_in: self.wire_currents[(wire, 1)] = current_magnitude # Conventional current flow out of pin_in
+                                         elif wire.end_pin == pin_in: self.wire_currents[(wire, -1)] = current_magnitude # Conventional current flow into pin_in
                                     elif ind_current < -1e-9: # Current flows from out to in
-                                         if wire.start_pin == pin_in: self.wire_currents[(wire, 1)] = current_magnitude # Electron flow out of pin_in
-                                         elif wire.end_pin == pin_in: self.wire_currents[(wire, -1)] = current_magnitude # Electron flow into pin_in
+                                         if wire.start_pin == pin_in: self.wire_currents[(wire, -1)] = current_magnitude # Conventional current flow into pin_in
+                                         elif wire.end_pin == pin_in: self.wire_currents[(wire, 1)] = current_magnitude # Conventional current flow out of pin_in
                                     else:
                                          self.wire_currents[(wire, 0)] = 0.0
 
                                for wire in wires_out:
                                     if ind_current > 1e-9: # Current flows from in to out
-                                         if wire.start_pin == pin_out: self.wire_currents[(wire, 1)] = current_magnitude # Electron flow out of pin_out
-                                         elif wire.end_pin == pin_out: self.wire_currents[(wire, -1)] = current_magnitude # Electron flow into pin_out
+                                         if wire.start_pin == pin_out: self.wire_currents[(wire, -1)] = current_magnitude # Conventional current flow into pin_out
+                                         elif wire.end_pin == pin_out: self.wire_currents[(wire, 1)] = current_magnitude # Conventional current flow out of pin_out
                                     elif ind_current < -1e-9: # Current flows from out to in
-                                         if wire.start_pin == pin_out: self.wire_currents[(wire, -1)] = current_magnitude # Electron flow into pin_out
-                                         elif wire.end_pin == pin_out: self.wire_currents[(wire, 1)] = current_magnitude # Electron flow out of pin_out
+                                         if wire.start_pin == pin_out: self.wire_currents[(wire, 1)] = current_magnitude # Conventional current flow out of pin_out
+                                         elif wire.end_pin == pin_out: self.wire_currents[(wire, -1)] = current_magnitude # Conventional current flow into pin_out
                                     else:
                                          self.wire_currents[(wire, 0)] = 0.0
 
@@ -861,48 +861,79 @@ class CircuitSimulator:
         return connected_wires
 
     def get_results_description(self, include_wire_currents=False):
-        if not self.node_voltages:
-            return "No simulation results available. Run simulation first."
+        if not self.node_voltages and not self.component_currents:
+            return "No simulation results available."
 
-        description = "Simulation Results:\n"
-        description += "\nNode Voltages:\n"
-        sorted_node_ids = sorted(self.node_voltages.keys())
-        for node_id in sorted_node_ids:
-             voltage = self.node_voltages[node_id]
-             description += f"  Node {node_id}: {voltage:.4f} V\n"
+        description = "DC Simulation Results:\n"
+        description += "Node Voltages:\n"
+        if self.node_voltages:
+            sorted_node_ids = sorted(self.node_voltages.keys())
+            for node_id in sorted_node_ids:
+                voltage = self.node_voltages[node_id]
+                ground_status = " (Ground)" if self.netlist.nodes.get(node_id, None) and self.netlist.nodes[node_id].is_ground else ""
+                description += f"  Node {node_id}{ground_status}: {voltage:.3e} V\n"
+        else:
+            description += "  No node voltage data.\n"
 
         description += "\nComponent Currents:\n"
         if self.component_currents:
-             sorted_current_items = sorted(self.component_currents.items(), key=lambda item: (item[0][0].component_name, item[0][1]))
-             for (component, current_label), current in sorted_current_items:
-                  if isinstance(current, (int, float)):
-                       description += f"  {component.component_name} ({current_label}): {current:.4f} A\n"
-                  else:
-                       description += f"  {component.component_name} ({current_label}): {current}\n"
+            for (component, current_label), current_val in self.component_currents.items():
+                if isinstance(current_val, str): # Handle "Unconnected Pin" or similar messages
+                    description += f"  {component.component_name} ({current_label}): {current_val}\n"
+                else:
+                    description += f"  {component.component_name} ({current_label}): {current_val:.3e} A\n"
         else:
-             description += "  No component currents calculated (possibly an empty or unconnected circuit).\n"
+            description += "  No component current data.\n"
 
         if include_wire_currents:
-             description += "\nWire Currents (Electron Flow Magnitude):\n"
-             if self.wire_currents:
-                  sorted_wire_currents = sorted(self.wire_currents.items(),
-                                                key=lambda item: (item[0][0].start_comp.component_name if item[0][0].start_comp else "",
-                                                                  item[0][0].end_comp.component_name if item[0][0].end_comp else "",
-                                                                  item[0][1]))
-                  for (wire, direction), current in sorted_wire_currents:
-                       start_comp_name = wire.start_comp.component_name if wire.start_comp else "Unknown"
-                       start_pin_name = wire.start_pin.data(1) if wire.start_pin else "Unknown"
-                       end_comp_name = wire.end_comp.component_name if wire.end_comp else "Unknown"
-                       end_pin_name = wire.end_pin.data(1) if wire.end_pin else "Unknown"
-                       direction_str = "Start->End" if direction == 1 else ("End->Start" if direction == -1 else "Zero")
-                       if isinstance(current, (int, float)):
-                            description += f"  Wire ({start_comp_name}.{start_pin_name} to {end_comp_name}.{end_pin_name}) [{direction_str}]: {current:.4f} A\n"
-                       else:
-                            description += f"  Wire ({start_comp_name}.{start_pin_name} to {end_comp_name}.{end_pin_name}) [{direction_str}]: {current}\n"
-             else:
-                  description += "  No wire currents calculated.\n"
+            description += "\nWire Currents (Conventional Current Flow):\n" # Changed from Electron Flow
+            if self.wire_currents:
+                processed_wires = set()
+                for wire_obj in self.netlist.wires: # Iterate through actual wire objects to ensure all are covered
+                    found_current_for_wire = False
+                    for (wire, direction), current_val in self.wire_currents.items():
+                        if wire == wire_obj:
+                            if wire in processed_wires:
+                                continue # Already described this wire
+
+                            start_pin_comp = wire.start_pin.data(2)
+                            start_pin_name = wire.start_pin.data(1)
+                            end_pin_comp = wire.end_pin.data(2)
+                            end_pin_name = wire.end_pin.data(1)
+
+                            wire_id_str = f"{start_pin_comp.component_name}.{start_pin_name} to {end_pin_comp.component_name}.{end_pin_name}"
+
+                            flow_desc = "No current"
+                            if abs(current_val) > 1e-9: # Check if current is non-zero
+                                if direction == 1: # Conventional current Start to End
+                                    flow_desc = f"Conventional current from {start_pin_comp.component_name}.{start_pin_name} to {end_pin_comp.component_name}.{end_pin_name}"
+                                elif direction == -1: # Conventional current End to Start
+                                    flow_desc = f"Conventional current from {end_pin_comp.component_name}.{end_pin_name} to {start_pin_comp.component_name}.{start_pin_name}"
+                            description += f"  Wire ({wire_id_str}): {current_val:.3e} A ({flow_desc})\n"
+                            processed_wires.add(wire)
+                            found_current_for_wire = True
+                            break # Found current for this wire_obj
+                    if not found_current_for_wire: # Wire exists but no current entry (should be (wire,0):0.0 or similar)
+                        start_pin_comp = wire_obj.start_pin.data(2)
+                        start_pin_name = wire_obj.start_pin.data(1)
+                        end_pin_comp = wire_obj.end_pin.data(2)
+                        end_pin_name = wire_obj.end_pin.data(1)
+                        wire_id_str = f"{start_pin_comp.component_name}.{start_pin_name} to {end_pin_comp.component_name}.{end_pin_name}"
+                        # Check if there's a zero current entry
+                        zero_current_entry = self.wire_currents.get((wire_obj, 0))
+                        if zero_current_entry is not None:
+                             description += f"  Wire ({wire_id_str}): {zero_current_entry:.3e} A (No current)\n"
+                        else:
+                             description += f"  Wire ({wire_id_str}): 0.000e+00 A (No current / Not in results)\n" # Default if no entry at all
+                        processed_wires.add(wire_obj)
 
 
+            else:
+                description += "  No wire current data.\n"
+
+        # Revert temporary ground setting if it was auto-assigned during simulation
+        # This part should be handled at the end of run_dc_analysis or simulate_transient
+        # For now, just return the description.
         return description
 
     def get_node_voltage(self, node_id):
@@ -1288,7 +1319,7 @@ class MainWindow(QMainWindow):
         # Analysis menu with DC and Transient actions
         analysis_menu = menubar.addMenu("&Analysis")
         dc_action = QAction("DC Analysis", self)
-        dc_action.triggered.connect(self.run_dc_analysis)
+        dc_action.triggered.connect(self.start_simulation)
         analysis_menu.addAction(dc_action)
         transient_action = QAction("Transient Analysis", self)
         transient_action.triggered.connect(self.run_transient_analysis)
