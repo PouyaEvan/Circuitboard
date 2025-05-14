@@ -1,0 +1,139 @@
+{
+    "components": [
+        {
+            "type": "VoltageSource",
+            "name": "V1",
+            "position": {
+                "x": -180.0,
+                "y": -60.0
+            },
+            "rotation": 90.0,
+            "properties": {
+                "Voltage": 5.0
+            }
+        },
+        {
+            "type": "Resistor",
+            "name": "R1",
+            "position": {
+                "x": -40.0,
+                "y": -160.0
+            },
+            "rotation": 0.0,
+            "properties": {
+                "Resistance": 1000.0
+            }
+        },
+        {
+            "type": "Capacitor",
+            "name": "C1",
+            "position": {
+                "x": 120.0,
+                "y": -40.0
+            },
+            "rotation": 90.0,
+            "properties": {
+                "Capacitance": 1e-06
+            }
+        }
+    ],
+    "wires": [
+        {
+            "start_pin": {
+                "component": "V1",
+                "pin": "-"
+            },
+            "end_pin": {
+                "component": "R1",
+                "pin": "in"
+            },
+            "points": [
+                {
+                    "x": -180.0,
+                    "y": -80.0
+                },
+                {
+                    "x": -60.0,
+                    "y": -80.0
+                },
+                {
+                    "x": -60.0,
+                    "y": -160.0
+                }
+            ]
+        },
+        {
+            "start_pin": {
+                "component": "R1",
+                "pin": "out"
+            },
+            "end_pin": {
+                "component": "C1",
+                "pin": "in"
+            },
+            "points": [
+                {
+                    "x": 60.0,
+                    "y": -160.0
+                },
+                {
+                    "x": 60.0,
+                    "y": -80.0
+                },
+                {
+                    "x": 120.0,
+                    "y": -85.0
+                }
+            ]
+        },
+        {
+            "start_pin": {
+                "component": "C1",
+                "pin": "out"
+            },
+            "end_pin": {
+                "component": "V1",
+                "pin": "+"
+            },
+            "points": [
+                {
+                    "x": 120.0,
+                    "y": 35.0
+                },
+                {
+                    "x": -180.0,
+                    "y": 40.0
+                },
+                {
+                    "x": -180.0,
+                    "y": 40.0
+                }
+            ]
+        }
+    ],
+    "ground_node_id": null,
+    "component_counters": {
+        "R": 1,
+        "V": 1,
+        "L": 0,
+        "C": 1,
+        "I": 0,
+        "Other": 0,
+        "GND": 0
+    },
+    "used_component_names": {
+        "R": [
+            "R1"
+        ],
+        "V": [
+            "V1"
+        ],
+        "L": [],
+        "C": [
+            "C1"
+        ],
+        "I": [],
+        "Other": [],
+        "GND": []
+    }
+}

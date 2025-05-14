@@ -1,0 +1,101 @@
+{
+    "components": [
+        {
+            "type": "Resistor",
+            "name": "R1",
+            "position": {
+                "x": -80.0,
+                "y": -160.0
+            },
+            "rotation": 0.0,
+            "properties": {
+                "Resistance": 1000.0
+            }
+        },
+        {
+            "type": "VoltageSource",
+            "name": "V1",
+            "position": {
+                "x": -80.0,
+                "y": 0.0
+            },
+            "rotation": 0.0,
+            "properties": {
+                "Voltage": 5.0
+            }
+        }
+    ],
+    "wires": [
+        {
+            "start_pin": {
+                "component": "V1",
+                "pin": "-"
+            },
+            "end_pin": {
+                "component": "R1",
+                "pin": "in"
+            },
+            "points": [
+                {
+                    "x": -100.0,
+                    "y": 0.0
+                },
+                {
+                    "x": -100.0,
+                    "y": -160.0
+                },
+                {
+                    "x": -100.0,
+                    "y": -160.0
+                }
+            ]
+        },
+        {
+            "start_pin": {
+                "component": "V1",
+                "pin": "+"
+            },
+            "end_pin": {
+                "component": "R1",
+                "pin": "out"
+            },
+            "points": [
+                {
+                    "x": 20.0,
+                    "y": 0.0
+                },
+                {
+                    "x": 20.0,
+                    "y": -160.0
+                },
+                {
+                    "x": 20.0,
+                    "y": -160.0
+                }
+            ]
+        }
+    ],
+    "ground_node_id": null,
+    "component_counters": {
+        "R": 1,
+        "V": 1,
+        "L": 0,
+        "C": 0,
+        "I": 0,
+        "Other": 0,
+        "GND": 0
+    },
+    "used_component_names": {
+        "R": [
+            "R1"
+        ],
+        "V": [
+            "V1"
+        ],
+        "L": [],
+        "C": [],
+        "I": [],
+        "Other": [],
+        "GND": []
+    }
+}
