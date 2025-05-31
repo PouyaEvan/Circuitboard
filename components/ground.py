@@ -55,6 +55,8 @@ class Ground(Component):
             label_rect = self.label_item.boundingRect()
             current_pos = self.label_item.pos()
             new_x = 0 - label_rect.width()/2
-            self.label_item.setPos(new_x, current_pos.y())    def to_dict(self):
+            self.label_item.setPos(new_x, current_pos.y())
+
+    def to_dict(self):
         data = super().to_dict()
         return data
