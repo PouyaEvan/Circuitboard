@@ -639,6 +639,12 @@ class MainWindow(QMainWindow):
                   if current_value is not None:
                        component.display_current(current_value)
 
+        # Display wire currents and arrows
+        for wire in self.netlist.wires:
+            current_magnitude, direction = self.simulation_results.get_wire_current_info(wire)
+            if current_magnitude is not None and abs(current_magnitude) > 1e-12:
+                wire.update_current_visual(current_magnitude, direction)
+
     def hide_simulation_results(self):
         print("Hiding simulation results on canvas...")
 
@@ -648,6 +654,10 @@ class MainWindow(QMainWindow):
 
         for component in self.netlist.components:
              component.hide_current_display()
+
+        # Hide wire current displays
+        for wire in self.netlist.wires:
+            wire.hide_current_display()
 
     def toggle_snap_to_grid(self, checked):
         """Toggles the snap-to-grid feature."""

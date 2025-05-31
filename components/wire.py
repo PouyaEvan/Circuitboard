@@ -192,3 +192,19 @@ class Wire(QGraphicsPathItem):
         text_item.setPos(xm, ym)
         self._current_text = text_item
 
+    def hide_current_display(self):
+        """Hide current arrows and text from the wire."""
+        # Remove current arrow
+        if hasattr(self, '_current_arrow') and self._current_arrow:
+            scene = self.scene()
+            if scene and self._current_arrow.scene():
+                scene.removeItem(self._current_arrow)
+            self._current_arrow = None
+        
+        # Remove current text
+        if hasattr(self, '_current_text') and self._current_text:
+            scene = self.scene()
+            if scene and self._current_text.scene():
+                scene.removeItem(self._current_text)
+            self._current_text = None
+

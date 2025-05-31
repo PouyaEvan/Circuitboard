@@ -26,33 +26,33 @@ class Inductor(Component):
 
         # Inductor coils: draw uniform semicircles for precision
         coil_count = 6
-        turn_spacing = body_width / (coil_count)
+        turn_spacing = body_width / coil_count
         coil_radius = turn_spacing / 2
         coil_amplitude = coil_radius  # Height of the coil for label positioning
         coil_path = QPainterPath()
         # Start at first coil entry point
-        coil_path.moveTo(lead_length, 0)
+        coil_path.moveTo(0, 0)
         # Draw each semicircular arc
         for i in range(coil_count):
-            rect_x = lead_length + i * (2 * coil_radius)
+            rect_x = i * (2 * coil_radius)
             # arcTo(x, y, w, h, startAngle, sweepLength)
             coil_path.arcTo(rect_x, -coil_radius, 2 * coil_radius, 2 * coil_radius, 180, -180)
 
         coil_item = QGraphicsPathItem(coil_path, self)
         coil_item.setPen(QPen(Qt.GlobalColor.black, 2))
-        coil_item.setPos(lead_length, 0) # Position coils after the first lead
+        coil_item.setPos(0, 0)  # Position coils at the origin
 
         lead1 = QGraphicsLineItem(-lead_length, 0, 0, 0, self)
         lead1.setPen(QPen(Qt.GlobalColor.black, 2))
 
-        lead2 = QGraphicsLineItem(lead_length + body_width, 0, lead_length + body_width + lead_length, 0, self)
+        lead2 = QGraphicsLineItem(body_width, 0, body_width + lead_length, 0, self)
         lead2.setPen(QPen(Qt.GlobalColor.black, 2))
 
         pin_in = self.add_pin(-lead_length, 0, "in")
-        pin_out = self.add_pin(lead_length + body_width + lead_length, 0, "out")
+        pin_out = self.add_pin(body_width + lead_length, 0, "out")
 
         # Create label and update text to include value
-        self.create_label(name, x_offset=lead_length + body_width/2, y_offset=-coil_amplitude - 5)
+        self.create_label(name, x_offset=body_width / 2, y_offset=-coil_amplitude - 5)
         self.update_label_text()
 
     def get_properties(self):
