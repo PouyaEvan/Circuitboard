@@ -11,8 +11,15 @@ from components.cs import CurrentSource
 try:
     import numpy as np
     NUMPY_AVAILABLE = True
+    # Import enhanced netlist if available
+    try:
+        from core.enhanced_netlist import EnhancedCircuitNetlist, EnhancedNode, CircuitValidator
+        ENHANCED_NETLIST_AVAILABLE = True
+    except ImportError:
+        ENHANCED_NETLIST_AVAILABLE = False
 except ImportError:
     NUMPY_AVAILABLE = False
+    ENHANCED_NETLIST_AVAILABLE = False
 
 class Node:
     def __init__(self, node_id):
@@ -47,6 +54,30 @@ class Node:
 class CircuitNetlist:
     def __init__(self, canvas):
         self.canvas = canvas
+        
+        # Try to use enhanced netlist if available
+        if ENHANCED_NETLIST_AVAILABLE:
+            try:
+                self._enhanced_netlist = EnhancedCircuitNetlist(canvas)
+                self._using_enhanced = True
+                print("Enhanced netlist initialized successfully.")
+                
+                # Delegate properties to enhanced netlist
+                self.nodes = self._enhanced_netlist.nodes
+                self.components = self._enhanced_netlist.components
+                self.wires = self._enhanced_netlist.wires
+                self._next_node_id = self._enhanced_netlist._next_node_id
+                self.ground_node_id = self._enhanced_netlist.ground_node_id
+                self.node_visuals = self._enhanced_netlist.node_visuals
+                self.junction_visuals = self._enhanced_netlist.junction_visuals
+                return
+                
+            except Exception as e:
+                print(f"Failed to initialize enhanced netlist: {e}")
+                print("Falling back to legacy netlist...")
+        
+        # Legacy initialization
+        self._using_enhanced = False
         self.nodes = {}
         self.components = []
         self.wires = []
@@ -61,6 +92,11 @@ class CircuitNetlist:
         return None
 
     def add_component(self, component):
+        # Delegate to enhanced netlist if available
+        if self._using_enhanced:
+            return self._enhanced_netlist.add_component(component)
+        
+        # Legacy implementation
         self.components.append(component)
         if isinstance(component, Ground):
              ground_pin = component.get_pins()[0]
@@ -77,6 +113,11 @@ class CircuitNetlist:
 
 
     def remove_component(self, component):
+        # Delegate to enhanced netlist if available
+        if self._using_enhanced:
+            return self._enhanced_netlist.remove_component(component)
+        
+        # Legacy implementation
         if component in self.components:
             self.components.remove(component)
             nodes_to_clean = set()
@@ -104,6 +145,11 @@ class CircuitNetlist:
 
 
     def add_wire(self, wire):
+        # Delegate to enhanced netlist if available
+        if self._using_enhanced:
+            return self._enhanced_netlist.add_wire(wire)
+        
+        # Legacy implementation
         self.wires.append(wire)
 
         start_pin = wire.start_pin
@@ -180,6 +226,11 @@ class CircuitNetlist:
 
 
     def remove_wire(self, wire):
+        # Delegate to enhanced netlist if available
+        if self._using_enhanced:
+            return self._enhanced_netlist.remove_wire(wire)
+        
+        # Legacy implementation
         print(f"Attempting to remove wire object: {wire}")
         if wire not in self.wires:
             print("Attempted to remove wire not in netlist. Skipping.")
@@ -254,6 +305,11 @@ class CircuitNetlist:
         return node_id
 
     def set_ground_node(self, node_id):
+        # Delegate to enhanced netlist if available
+        if self._using_enhanced:
+            return self._enhanced_netlist.set_ground_node(node_id)
+        
+        # Legacy implementation
         if node_id is not None and node_id not in self.nodes:
              print(f"Warning: Attempted to set non-existent node {node_id} as ground.")
              return
@@ -275,11 +331,21 @@ class CircuitNetlist:
 
 
     def get_ground_node(self):
+        # Delegate to enhanced netlist if available
+        if self._using_enhanced:
+            return self._enhanced_netlist.get_ground_node()
+        
+        # Legacy implementation
         if self.ground_node_id is not None and self.ground_node_id in self.nodes:
             return self.nodes[self.ground_node_id]
         return None
 
     def find_automatic_ground_node_id(self):
+        # Delegate to enhanced netlist if available
+        if self._using_enhanced:
+            return self._enhanced_netlist.find_automatic_ground_node_id()
+        
+        # Legacy implementation
         if not self.nodes:
             return None
         most_connected_node = None
@@ -292,6 +358,11 @@ class CircuitNetlist:
 
 
     def generate_netlist_description(self):
+        # Use enhanced description if available
+        if self._using_enhanced:
+            return self._enhanced_netlist.generate_enhanced_netlist_description()
+        
+        # Legacy implementation
         description = "Circuit Netlist:\n"
         description += "Components:\n"
         for comp in self.components:

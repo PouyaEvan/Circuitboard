@@ -13,10 +13,47 @@ from PyQt6.QtCore import Qt
 
 from config import *
 
+# Try to import advanced wire system
+try:
+    from components.advanced_wire import AdvancedWire, WireType, WireStyle
+    ADVANCED_WIRE_AVAILABLE = True
+except ImportError:
+    ADVANCED_WIRE_AVAILABLE = False
+
 
 class Wire(QGraphicsPathItem):
     def __init__(self, start_pin, end_pin, parent=None):
         super().__init__(parent)
+        
+        # Try to use advanced wire if available
+        if ADVANCED_WIRE_AVAILABLE:
+            try:
+                # Create advanced wire instance
+                self._advanced_wire = AdvancedWire(start_pin, end_pin, WireType.NORMAL, parent)
+                self._using_advanced = True
+                
+                # Delegate core properties
+                self.start_pin = self._advanced_wire.start_pin
+                self.end_pin = self._advanced_wire.end_pin
+                self.start_comp = self._advanced_wire.start_comp
+                self.end_comp = self._advanced_wire.end_comp
+                self._points = self._advanced_wire._points
+                
+                # Copy visual properties
+                self.setPen(self._advanced_wire.pen())
+                self.setZValue(self._advanced_wire.zValue())
+                self.setFlags(self._advanced_wire.flags())
+                self.setPath(self._advanced_wire.path())
+                
+                print("Advanced wire system initialized successfully.")
+                return
+                
+            except Exception as e:
+                print(f"Failed to initialize advanced wire: {e}")
+                print("Falling back to legacy wire...")
+        
+        # Legacy initialization
+        self._using_advanced = False
         self.start_pin = start_pin
         self.end_pin = end_pin
         self.setPen(WIRE_PEN)
@@ -33,6 +70,14 @@ class Wire(QGraphicsPathItem):
         self.update_positions()
 
     def update_positions(self):
+        # Delegate to advanced wire if available
+        if self._using_advanced:
+            self._advanced_wire.update_positions()
+            # Sync visual properties
+            self.setPath(self._advanced_wire.path())
+            return
+        
+        # Legacy implementation
         if self.start_pin and self.end_pin:
             start_pos = self.start_pin.scenePos()
             end_pos = self.end_pin.scenePos()
@@ -60,6 +105,11 @@ class Wire(QGraphicsPathItem):
             self.setPath(QPainterPath())
 
     def remove(self):
+        # Delegate to advanced wire if available
+        if self._using_advanced:
+            return self._advanced_wire.remove()
+        
+        # Legacy implementation
         print(f"Wire.remove() called for {self}")
         scene = self.scene()
         if not scene:
@@ -100,6 +150,11 @@ class Wire(QGraphicsPathItem):
         return data
 
     def show_current_arrow(self, current_value, direction):
+        # Delegate to advanced wire if available
+        if self._using_advanced:
+            return self._advanced_wire.show_current_arrow(current_value, direction)
+        
+        # Legacy implementation
         # Remove any existing arrow
         if hasattr(self, '_current_arrow') and self._current_arrow:
             scene = self.scene()
@@ -155,8 +210,12 @@ class Wire(QGraphicsPathItem):
             arrow_item.setZValue(self.zValue() + 0.2)
             self._current_arrow = arrow_item
 
-    # Optionally, call this after updating wire current results from simulation
     def update_current_visual(self, current_value, direction):
+        # Delegate to advanced wire if available
+        if self._using_advanced:
+            return self._advanced_wire.update_current_visual(current_value, direction)
+        
+        # Legacy implementation
         self.show_current_arrow(current_value, direction)
         # Show current value as text (absolute value)
         if hasattr(self, '_current_text') and self._current_text:
@@ -194,6 +253,11 @@ class Wire(QGraphicsPathItem):
 
     def hide_current_display(self):
         """Hide current arrows and text from the wire."""
+        # Delegate to advanced wire if available
+        if self._using_advanced:
+            return self._advanced_wire.hide_current_display()
+        
+        # Legacy implementation
         # Remove current arrow
         if hasattr(self, '_current_arrow') and self._current_arrow:
             scene = self.scene()

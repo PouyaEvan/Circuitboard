@@ -8,8 +8,15 @@ from components.capacitor import Capacitor
 try:
     import numpy as np
     NUMPY_AVAILABLE = True
+    # Import advanced simulator if available
+    try:
+        from core.advanced_simulator import AdvancedCircuitSimulator, SimulationSettings, AnalysisType
+        ADVANCED_SIMULATOR_AVAILABLE = True
+    except ImportError:
+        ADVANCED_SIMULATOR_AVAILABLE = False
 except ImportError:
     NUMPY_AVAILABLE = False
+    ADVANCED_SIMULATOR_AVAILABLE = False
 
 class CircuitSimulator:
     def __init__(self, netlist):
@@ -19,14 +26,71 @@ class CircuitSimulator:
             self.node_voltages = {}
             self.component_currents = {}
             self.wire_currents = {}
+            self.advanced_simulator = None
         else:
             self.netlist = netlist
             self.node_voltages = {}
             self.component_currents = {}
             self.wire_currents = {}
+            
+            # Initialize advanced simulator if available
+            if ADVANCED_SIMULATOR_AVAILABLE:
+                try:
+                    settings = SimulationSettings(
+                        use_sparse=True,
+                        tolerance=1e-12,
+                        enable_debug=False
+                    )
+                    self.advanced_simulator = AdvancedCircuitSimulator(netlist, settings)
+                    print("Advanced simulator initialized successfully.")
+                except Exception as e:
+                    print(f"Failed to initialize advanced simulator: {e}")
+                    self.advanced_simulator = None
+            else:
+                self.advanced_simulator = None
 
 
     def run_dc_analysis(self):
+        # Try advanced simulator first
+        if self.advanced_simulator is not None:
+            try:
+                print("Using advanced simulator for DC analysis...")
+                result = self.advanced_simulator.run_dc_analysis()
+                
+                if result.success:
+                    # Extract results for compatibility
+                    self.node_voltages = {}
+                    self.component_currents = {}
+                    self.wire_currents = {}
+                    
+                    # Convert complex results to real for DC analysis
+                    for node_id, voltage in result.node_voltages.items():
+                        if isinstance(voltage, complex):
+                            self.node_voltages[node_id] = voltage.real
+                        else:
+                            self.node_voltages[node_id] = voltage
+                    
+                    for (comp, label), current in result.component_currents.items():
+                        if isinstance(current, complex):
+                            self.component_currents[(comp, label)] = current.real
+                        else:
+                            self.component_currents[(comp, label)] = current
+                    
+                    for (wire, direction), current in result.wire_currents.items():
+                        if isinstance(current, complex):
+                            self.wire_currents[(wire, direction)] = current.real
+                        else:
+                            self.wire_currents[(wire, direction)] = current
+                    
+                    return result.message
+                else:
+                    print(f"Advanced simulator failed: {result.message}")
+                    print("Falling back to legacy simulator...")
+            except Exception as e:
+                print(f"Advanced simulator error: {e}")
+                print("Falling back to legacy simulator...")
+        
+        # Fallback to legacy implementation
         if not self.netlist or not NUMPY_AVAILABLE:
             self.node_voltages = {}
             self.component_currents = {}
