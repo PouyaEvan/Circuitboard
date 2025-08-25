@@ -392,23 +392,24 @@ class MainWindow(QMainWindow):
         simulator = CircuitSimulator(self.netlist)
         result_message = simulator.run_dc_analysis()
 
-        if "Simulation completed." in result_message:
+        if "Simulation completed." in result_message or "DC Analysis completed" in result_message:
              self.simulation_results = simulator
-             results_description = simulator.get_results_description(include_wire_currents=False)
-             QMessageBox.information(self, "Simulation Results", results_description)
+             results_description = simulator.get_results_description(include_wire_currents=True)
+             
+             # Use enhanced scrollable dialog for results
+             self._show_simulation_results_dialog(results_description, result_message)
              print("Simulation successful.")
-             print(results_description)
+             print(result_message)
 
              results_action = self.findChild(QAction, "results_action")
              if results_action and results_action.isChecked():
                   self._simulation_results_visible = True
                   self.display_simulation_results()
 
-
         else:
              self.simulation_results = None
              self.hide_simulation_results()
-             QMessageBox.warning(self, "Simulation Error", result_message)
+             self._show_simulation_error_dialog(result_message)
              print("Simulation failed.")
              print(result_message)
 
@@ -420,9 +421,287 @@ class MainWindow(QMainWindow):
         print("Simulation Restarted (Placeholder)")
         QMessageBox.information(self, "Simulation", "Simulation Restarted (Placeholder)")
 
+    def _show_simulation_results_dialog(self, results_description, summary_message):
+        """Show simulation results in an enhanced scrollable dialog."""
+        from PyQt6.QtWidgets import QDialog, QVBoxLayout, QTextEdit, QDialogButtonBox, QLabel, QHBoxLayout, QPushButton
+        from PyQt6.QtGui import QFont
+        from PyQt6.QtCore import QSize
+        
+        dlg = QDialog(self)
+        dlg.setWindowTitle('Simulation Results')
+        dlg.resize(800, 600)
+        dlg.setMinimumSize(600, 400)
+        
+        layout = QVBoxLayout(dlg)
+        layout.setSpacing(10)
+        layout.setContentsMargins(15, 15, 15, 15)
+        
+        # Header with summary
+        header_layout = QHBoxLayout()
+        
+        status_label = QLabel("✅ Simulation Successful")
+        status_label.setStyleSheet("""
+            QLabel {
+                background-color: #d4edda;
+                color: #155724;
+                border: 1px solid #c3e6cb;
+                border-radius: 5px;
+                padding: 8px 12px;
+                font-weight: bold;
+                font-size: 14px;
+            }
+        """)
+        header_layout.addWidget(status_label)
+        
+        header_layout.addStretch()
+        
+        # Summary info
+        if self.simulation_results:
+            try:
+                from core.analysis.results_formatter import ResultsFormatter
+                formatter = ResultsFormatter(
+                    self.simulation_results.node_voltages,
+                    self.simulation_results.component_currents,
+                    self.simulation_results.wire_currents,
+                    self.netlist
+                )
+                stats = formatter.get_summary_stats()
+                
+                summary_text = f"Nodes: {stats['num_nodes']} | Components: {stats['num_components']} | Wires: {stats['num_wires']}"
+                summary_label = QLabel(summary_text)
+                summary_label.setStyleSheet("color: #666; font-size: 12px;")
+                header_layout.addWidget(summary_label)
+            except:
+                pass
+                
+        layout.addLayout(header_layout)
+        
+        # Results text area with scrolling
+        text_edit = QTextEdit(dlg)
+        text_edit.setReadOnly(True)
+        text_edit.setPlainText(results_description)
+        
+        # Enhanced text formatting
+        font = QFont("Consolas", 10)
+        if not font.exactMatch():
+            font = QFont("Courier New", 10)
+        if not font.exactMatch():
+            font = QFont("monospace", 10)
+        text_edit.setFont(font)
+        
+        # Proper scrolling configuration
+        text_edit.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        text_edit.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        text_edit.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
+        
+        # Styling for better appearance
+        text_edit.setStyleSheet("""
+            QTextEdit {
+                background-color: #f8f9fa;
+                border: 1px solid #dee2e6;
+                border-radius: 5px;
+                padding: 10px;
+                font-family: monospace;
+            }
+        """)
+        
+        layout.addWidget(text_edit)
+        
+        # Action buttons
+        button_layout = QHBoxLayout()
+        
+        # Copy to clipboard button
+        copy_button = QPushButton("📋 Copy to Clipboard")
+        copy_button.clicked.connect(lambda: self._copy_text_to_clipboard(results_description))
+        copy_button.setToolTip("Copy simulation results to clipboard")
+        
+        # Save to file button
+        save_button = QPushButton("💾 Save to File")
+        save_button.clicked.connect(lambda: self._save_results_to_file(results_description))
+        save_button.setToolTip("Save simulation results to a text file")
+        
+        button_layout.addWidget(copy_button)
+        button_layout.addWidget(save_button)
+        button_layout.addStretch()
+        
+        # Standard dialog buttons
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
+        buttons.accepted.connect(dlg.accept)
+        
+        button_layout.addWidget(buttons)
+        layout.addLayout(button_layout)
+        
+        dlg.exec()
+
+    def _show_simulation_error_dialog(self, error_message):
+        """Show simulation error in an enhanced scrollable dialog."""
+        from PyQt6.QtWidgets import QDialog, QVBoxLayout, QTextEdit, QDialogButtonBox, QLabel
+        from PyQt6.QtGui import QFont
+        
+        dlg = QDialog(self)
+        dlg.setWindowTitle('Simulation Error')
+        dlg.resize(700, 500)
+        dlg.setMinimumSize(500, 300)
+        
+        layout = QVBoxLayout(dlg)
+        layout.setSpacing(10)
+        layout.setContentsMargins(15, 15, 15, 15)
+        
+        # Error header
+        error_label = QLabel("❌ Simulation Failed")
+        error_label.setStyleSheet("""
+            QLabel {
+                background-color: #f8d7da;
+                color: #721c24;
+                border: 1px solid #f1b0b7;
+                border-radius: 5px;
+                padding: 8px 12px;
+                font-weight: bold;
+                font-size: 14px;
+                margin-bottom: 10px;
+            }
+        """)
+        layout.addWidget(error_label)
+        
+        # Error message with scrolling
+        text_edit = QTextEdit(dlg)
+        text_edit.setReadOnly(True)
+        text_edit.setPlainText(error_message)
+        
+        font = QFont("Consolas", 10)
+        if not font.exactMatch():
+            font = QFont("Courier New", 10)
+        text_edit.setFont(font)
+        
+        text_edit.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        text_edit.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        
+        text_edit.setStyleSheet("""
+            QTextEdit {
+                background-color: #fff5f5;
+                border: 1px solid #fed7d7;
+                border-radius: 5px;
+                padding: 10px;
+                font-family: monospace;
+            }
+        """)
+        
+        layout.addWidget(text_edit)
+        
+        # Dialog buttons
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
+        buttons.accepted.connect(dlg.accept)
+        layout.addWidget(buttons)
+        
+        dlg.exec()
+
+    def _copy_text_to_clipboard(self, text):
+        """Copy text to clipboard."""
+        from PyQt6.QtGui import QGuiApplication
+        clipboard = QGuiApplication.clipboard()
+        clipboard.setText(text)
+        print("Results copied to clipboard")
+
+    def _save_results_to_file(self, text):
+        """Save results to a text file."""
+        from PyQt6.QtWidgets import QFileDialog
+        import datetime
+        
+        default_filename = f"simulation_results_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save Simulation Results",
+            default_filename,
+            "Text Files (*.txt);;All Files (*)"
+        )
+        
+        if file_path:
+            try:
+                with open(file_path, 'w') as f:
+                    f.write(text)
+                print(f"Results saved to {file_path}")
+                QMessageBox.information(self, "Save Results", f"Results saved to {os.path.basename(file_path)}")
+            except Exception as e:
+                QMessageBox.warning(self, "Save Error", f"Could not save results: {e}")
+
     def show_netlist(self):
+        """Show netlist in an enhanced scrollable dialog."""
+        # Use enhanced dialog for netlist display too
         netlist_description = self.netlist.generate_netlist_description()
-        QMessageBox.information(self, "Circuit Netlist", netlist_description)
+        
+        from PyQt6.QtWidgets import QDialog, QVBoxLayout, QTextEdit, QDialogButtonBox, QLabel, QHBoxLayout, QPushButton
+        from PyQt6.QtGui import QFont
+        
+        dlg = QDialog(self)
+        dlg.setWindowTitle('Circuit Netlist')
+        dlg.resize(700, 500)
+        dlg.setMinimumSize(500, 350)
+        
+        layout = QVBoxLayout(dlg)
+        layout.setSpacing(10)
+        layout.setContentsMargins(15, 15, 15, 15)
+        
+        # Header
+        header_label = QLabel("📋 Circuit Netlist Description")
+        header_label.setStyleSheet("""
+            QLabel {
+                background-color: #e3f2fd;
+                color: #0d47a1;
+                border: 1px solid #bbdefb;
+                border-radius: 5px;
+                padding: 8px 12px;
+                font-weight: bold;
+                font-size: 14px;
+            }
+        """)
+        layout.addWidget(header_label)
+        
+        # Netlist text area with scrolling
+        text_edit = QTextEdit(dlg)
+        text_edit.setReadOnly(True)
+        text_edit.setPlainText(netlist_description)
+        
+        font = QFont("Consolas", 10)
+        if not font.exactMatch():
+            font = QFont("Courier New", 10)
+        text_edit.setFont(font)
+        
+        text_edit.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        text_edit.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        text_edit.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
+        
+        text_edit.setStyleSheet("""
+            QTextEdit {
+                background-color: #f8f9fa;
+                border: 1px solid #dee2e6;
+                border-radius: 5px;
+                padding: 10px;
+                font-family: monospace;
+            }
+        """)
+        
+        layout.addWidget(text_edit)
+        
+        # Action buttons
+        button_layout = QHBoxLayout()
+        
+        copy_button = QPushButton("📋 Copy")
+        copy_button.clicked.connect(lambda: self._copy_text_to_clipboard(netlist_description))
+        
+        save_button = QPushButton("💾 Save")
+        save_button.clicked.connect(lambda: self._save_results_to_file(netlist_description))
+        
+        button_layout.addWidget(copy_button)
+        button_layout.addWidget(save_button)
+        button_layout.addStretch()
+        
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
+        buttons.accepted.connect(dlg.accept)
+        
+        button_layout.addWidget(buttons)
+        layout.addLayout(button_layout)
+        
+        dlg.exec()
 
     def clear_circuit(self):
         # Clear all items from the scene
