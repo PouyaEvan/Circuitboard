@@ -1,45 +1,45 @@
-name: Build Standalone EXE
+# name: Build Standalone EXE
 
-on:
-  workflow_dispatch:
-  push:
-    branches: [main]
-    tags: ['v*']
+# on:
+#   workflow_dispatch:
+#   push:
+#     branches: [main]
+#     tags: ['v*']
 
-jobs:
-  build:
-    runs-on: windows-latest
+# jobs:
+#   build:
+#     runs-on: windows-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+#       - name: Set up Python
+#         uses: actions/setup-python@v5
+#         with:
+#           python-version: '3.11'
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pyinstaller
+#       - name: Install dependencies
+#         run: |
+#           python -m pip install --upgrade pip
+#           pip install -r requirements.txt
+#           pip install pyinstaller
 
-      - name: Build minimal standalone EXE with PyInstaller
-        run: |
-          pyinstaller --onefile main.py --name Circuitboard
+#       - name: Build minimal standalone EXE with PyInstaller
+#         run: |
+#           pyinstaller --onefile main.py --name Circuitboard
 
-      - name: Upload EXE artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Circuitboard-exe
-          path: dist/Circuitboard.exe
+#       - name: Upload EXE artifact
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: Circuitboard-exe
+#           path: dist/Circuitboard.exe
 
-      - name: Create GitHub Release (only on tag push)
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: ncipollo/release-action@v1
-        with:
-          tag: ${{ github.ref_name }}
-          name: Circuitboard ${{ github.ref_name }}
-          body: Release built Circuitboard executable
-          files: dist/Circuitboard.exe
+#       - name: Create GitHub Release (only on tag push)
+#         if: startsWith(github.ref, 'refs/tags/')
+#         uses: ncipollo/release-action@v1
+#         with:
+#           tag: ${{ github.ref_name }}
+#           name: Circuitboard ${{ github.ref_name }}
+#           body: Release built Circuitboard executable
+#           files: dist/Circuitboard.exe
